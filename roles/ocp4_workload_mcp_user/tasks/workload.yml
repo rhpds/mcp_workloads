@@ -15,7 +15,7 @@
   - mcp-openshift/mcpserver.yaml.j2
   - mcp-openshift/route.yaml.j2
 
-- name: Set up token for Gitea MCP Server
+- name: Delete existing token for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
       {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user
@@ -25,12 +25,12 @@
     user: "{{ ocp4_workload_mcp_gitea_user }}"
     password: "{{ ocp4_workload_mcp_gitea_password }}"
     force_basic_auth: true
-    validate_certs: false
+    validate_certs: true
 
 # Get Token for Gitea user
-# curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"industrial-edge"}'
+# curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"industrial-edge","scopes":["write:repository"]}'
 #      -u ${GITEA_USER}:openshift ${GITEA_URL}/api/v1/users/lab-user/tokens
-- name: Set up a Gitea token
+- name: Set up token for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
       {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user }}/tokens
@@ -41,10 +41,16 @@
     user: "{{ ocp4_workload_mcp_gitea_user }}"
     password: "{{ ocp4_workload_mcp_gitea_password }}"
     force_basic_auth: true
-    validate_certs: false
+    validate_certs: true
   vars:
     body:
       name: "{{ ocp4_workload_mcp_gitea_repository }}"
+      scopes:
+      - read:repository
+      # - write:repository
+      - read:issue
+      - write:issue
+      - read:user
   register: r_gitea_token
 
 - name: Set Gitea token variable
