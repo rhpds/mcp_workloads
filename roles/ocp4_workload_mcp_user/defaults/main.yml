@@ -8,7 +8,10 @@ ocp4_workload_mcp_openshift_image: quay.io/containers/kubernetes_mcp_server:late
 ocp4_workload_mcp_gitea_image: docker.gitea.com/gitea-mcp-server:latest
 
 # Gitea user should be created by the Gitea Operator workload
-ocp4_workload_mcp_gitea_url: http://gitea.gitea.svc:3000
+ocp4_workload_mcp_gitea_name: gitea
+ocp4_workload_mcp_gitea_namespace: gitea
+ocp4_workload_mcp_gitea_external_url: https://gitea.apps.mcp-gm8rr.dynamic.redhatworkshops.io
+ocp4_workload_mcp_gitea_internal_url: "http://{{ ocp4_workload_mcp_gitea_name }}.{{ ocp4_workload_mcp_gitea_namespace }}.svc:3000"
 ocp4_workload_mcp_gitea_repository: mcp
 ocp4_workload_mcp_gitea_user: "{{ ocp4_workload_mcp_user }}"
 ocp4_workload_mcp_gitea_password: ""

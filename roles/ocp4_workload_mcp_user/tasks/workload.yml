@@ -18,7 +18,7 @@
 - name: Set up token for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
-      {{ ocp4_workload_mcp_gitea_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user
+      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user
       }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
     method: DELETE
     status_code: [204, 404, 422]
@@ -33,7 +33,7 @@
 - name: Set up a Gitea token
   ansible.builtin.uri:
     url: >-
-      {{ ocp4_workload_mcp_gitea_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user }}/tokens
+      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user }}/tokens
     method: POST
     body: "{{ body }}"
     body_format: json
