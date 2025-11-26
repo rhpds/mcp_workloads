@@ -46,11 +46,10 @@
     body:
       name: "{{ ocp4_workload_mcp_gitea_repository }}"
       scopes:
+      - read:user
       - read:repository
-      # - write:repository
       - read:issue
       - write:issue
-      - read:user
   register: r_gitea_token
 
 - name: Set Gitea token variable
