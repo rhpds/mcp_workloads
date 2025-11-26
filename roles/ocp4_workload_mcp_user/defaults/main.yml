@@ -1,0 +1,16 @@
+---
+# ------------------------------------------------
+# Set up one user for the MCP Demo/Lab
+# ------------------------------------------------
+ocp4_workload_mcp_user: user1
+ocp4_workload_mcp_namespace: "mcp-{{ ocp4_workload_mcp_user }}"
+ocp4_workload_mcp_openshift_image: quay.io/containers/kubernetes_mcp_server:latest
+ocp4_workload_mcp_gitea_image: docker.gitea.com/gitea-mcp-server:latest
+
+# Gitea user should be created by the Gitea Operator workload
+ocp4_workload_mcp_gitea_url: http://gitea.gitea.svc:3000
+ocp4_workload_mcp_gitea_repository: mcp
+ocp4_workload_mcp_gitea_user: "{{ ocp4_workload_mcp_user }}"
+ocp4_workload_mcp_gitea_password: ""
+
+ocp4_workload_mcp_librechat_namespace: "librechat-{{ ocp4_workload_mcp_user }}"

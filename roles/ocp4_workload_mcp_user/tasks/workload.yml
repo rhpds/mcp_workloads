@@ -1,0 +1,61 @@
+---
+- name: Create MCP namespace
+  kubernetes.core.k8s:
+    state: present
+    api_version: v1
+    kind: Namespace
+    name: "{{ ocp4_workload_mcp_namespace }}"
+
+- name: Set up OpenShift MCP Server
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ item }}"
+  loop:
+  - mcp-openshift/clusterrolebinding.yaml.j2
+  - mcp-openshift/mcpserver.yaml.j2
+  - mcp-openshift/route.yaml.j2
+
+- name: Set up token for Gitea MCP Server
+  ansible.builtin.uri:
+    url: >-
+      {{ ocp4_workload_mcp_gitea_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user
+      }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
+    method: DELETE
+    status_code: [204, 404, 422]
+    user: "{{ ocp4_workload_mcp_gitea_user }}"
+    password: "{{ ocp4_workload_mcp_gitea_password }}"
+    force_basic_auth: true
+    validate_certs: false
+
+# Get Token for Gitea user
+# curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"industrial-edge"}'
+#      -u ${GITEA_USER}:openshift ${GITEA_URL}/api/v1/users/lab-user/tokens
+- name: Set up a Gitea token
+  ansible.builtin.uri:
+    url: >-
+      {{ ocp4_workload_mcp_gitea_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user }}/tokens
+    method: POST
+    body: "{{ body }}"
+    body_format: json
+    status_code: 201
+    user: "{{ ocp4_workload_mcp_gitea_user }}"
+    password: "{{ ocp4_workload_mcp_gitea_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  vars:
+    body:
+      name: "{{ ocp4_workload_mcp_gitea_repository }}"
+  register: r_gitea_token
+
+- name: Set Gitea token variable
+  set_fact:
+    _ocp4_workload_mcp_gitea_token: "{{ r_gitea_token.json.sha1 }}"
+
+- name: Set up Gitea MCP Server
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ item }}"
+  loop:
+  - mcp-gitea/secret.yaml.j2
+  - mcp-gitea/mcpserver.yaml.j2
+  - mcp-gitea/route.yaml.j2

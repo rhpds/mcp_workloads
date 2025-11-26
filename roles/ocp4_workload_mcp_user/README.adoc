@@ -1,0 +1,3 @@
+= ocp4_workload_mcp_user - Set up one user for the MCP Demo/Lab
+
+See defaults/main.yml for variables to set.
