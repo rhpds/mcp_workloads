@@ -52,7 +52,7 @@ spec:
               -H "Content-Type: application/json" \
               -d "{\"name\":\"${DEFAULT_USER_NAME}\",\"email\":\"${DEFAULT_USER_EMAIL}\",\"password\":\"${DEFAULT_USER_PASSWORD}\",\"confirm_password\":\"${DEFAULT_USER_PASSWORD}\"}")
 
-            if echo "$REGISTER_RESPONSE" | grep -q -E "user|success|token"; then
+            if echo "$REGISTER_RESPONSE" | grep -q -E "user|success|token|Please check your email to verify your email address"; then
               echo "User ${DEFAULT_USER_EMAIL} created successfully!"
               exit 0
             else
