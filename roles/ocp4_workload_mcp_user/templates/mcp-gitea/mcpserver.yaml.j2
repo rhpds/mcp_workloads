@@ -6,10 +6,10 @@ metadata:
   namespace: {{ ocp4_workload_mcp_namespace }}
 spec:
   image: {{ ocp4_workload_mcp_gitea_image }}
-  proxyPort: 8080
-  mcpPort: 8080
-  targetPort: 8080
   transport: streamable-http
+  proxyMode: streamable-http
+  proxyPort: 8080
+  mcpPort: 8000
   secrets:
   - name: gitea-creds
     key: url
@@ -25,6 +25,6 @@ spec:
         - /app/gitea-mcp
         - -d
         - -port
-        - "8080"
+        - "8000"
         - -transport
         - http
