@@ -6,10 +6,10 @@ metadata:
   namespace: {{ ocp4_workload_mcp_namespace }}
 spec:
   image: {{ ocp4_workload_mcp_openshift_image }}
-  proxyPort: 8000
+  transport: streamable-http
+  proxyMode: streamable-http
   mcpPort: 8000
-  targetPort: 8000
-  transport: sse
+  proxyPort: 8080
   podTemplateSpec:
     spec:
       containers:
