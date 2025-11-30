@@ -7,7 +7,6 @@ metadata:
 spec:
   image: {{ ocp4_workload_mcp_gitea_image }}
   transport: streamable-http
-  proxyMode: streamable-http
   proxyPort: 8080
   mcpPort: 8000
   secrets:
@@ -17,6 +16,13 @@ spec:
   - name: gitea-creds
     key: token
     targetEnvName: GITEA_ACCESS_TOKEN
+  env:
+  - name: FASTMCP_TIMEOUT
+    value: "0"
+  - name: FASTMCP_KEEPALIVE
+    value: "true"
+  - name: FASTMCP_IDLE_TIMEOUT
+    value: "3600"
   podTemplateSpec:
     spec:
       containers:

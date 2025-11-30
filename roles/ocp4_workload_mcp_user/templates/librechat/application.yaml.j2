@@ -49,11 +49,11 @@ spec:
             # Remote MCP Server Configuration
             mcpServers:
               openshift:
-                type: streamable-http
-                url: http://mcp-openshift-proxy.{{ ocp4_workload_mcp_namespace }}.svc:8000/mcp
+                type: sse
+                url: http://mcp-openshift-proxy.{{ ocp4_workload_mcp_namespace }}.svc.cluster.local:8080/sse
               gitea:
                 type: streamable-http
-                url: http://mcp-gitea-proxy.{{ ocp4_workload_mcp_namespace }}.svc:8000/mcp
+                url: http://mcp-gitea-proxy.{{ ocp4_workload_mcp_namespace }}.svc.cluster.local:8080/mcp
 
             # Custom OpenAI-compatible endpoints
             # https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/custom_endpoint

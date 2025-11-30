@@ -57,6 +57,7 @@
     state: present
     template: "{{ item }}"
   loop:
+  - mcp-openshift/scc.yaml.j2
   - mcp-openshift/clusterrolebinding.yaml.j2
   - mcp-openshift/mcpserver.yaml.j2
   - mcp-openshift/route.yaml.j2
@@ -66,6 +67,7 @@
     state: present
     template: "{{ item }}"
   loop:
+  - mcp-gitea/scc.yaml.j2
   - mcp-gitea/secret.yaml.j2
   - mcp-gitea/mcpserver.yaml.j2
   - mcp-gitea/route.yaml.j2
