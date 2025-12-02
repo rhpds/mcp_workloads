@@ -6,7 +6,7 @@
     method: DELETE
     status_code: [204, 404, 422]
     user: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
-    password: "{{ ocp4_workload_mcp_gitea_password }}"
+    password: "{{ ocp4_workload_mcp_gitea_user_password }}"
     force_basic_auth: true
     validate_certs: true
   loop: "{{ range(1, ocp4_workload_mcp_num_users + 1) | list }}"
@@ -25,7 +25,7 @@
     body_format: json
     status_code: 201
     user: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
-    password: "{{ ocp4_workload_mcp_gitea_password }}"
+    password: "{{ ocp4_workload_mcp_gitea_user_password }}"
     force_basic_auth: true
     validate_certs: true
   vars:
