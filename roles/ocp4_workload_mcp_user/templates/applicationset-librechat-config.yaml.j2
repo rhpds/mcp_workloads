@@ -15,14 +15,14 @@ spec:
 {% endfor %}
   template:
     metadata:
-      name: "{{ ocp4_workload_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+      name: "{{ ocp4_workload_mcp_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
       namespace: openshift-gitops
       finalizers:
       - resources-finalizer.argocd.argoproj.io
     spec:
       destination:
         name: ""
-        namespace: "{{ ocp4_workload_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+        namespace: "{{ ocp4_workload_mcp_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
         server: https://kubernetes.default.svc
       project: default
       syncPolicy:
@@ -41,7 +41,7 @@ spec:
 
             user: "{% raw %}{{ user }}{% endraw %}"
             application_name: librechat
-            namespace: "{{ ocp4_workload_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+            namespace: "{{ ocp4_workload_mcp_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
 
             secrets:
               # Required: LibreChat internal encryption and JWT secrets
