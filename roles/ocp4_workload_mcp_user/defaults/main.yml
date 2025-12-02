@@ -54,3 +54,4 @@ ocp4_workload_mcp_librechat_password: ""
 # -------------------------------------------------------------------
 ocp4_workload_mcp_agent_repo_path: helm/agent
 ocp4_workload_mcp_agent_namespace_base: agent
+ocp4_workload_mcp_agent_model_name: "openai/Llama-4-Scout-17B-16E-W4A16"

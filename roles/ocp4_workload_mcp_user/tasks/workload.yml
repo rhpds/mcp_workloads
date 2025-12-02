@@ -48,6 +48,7 @@
 - name: Debug Gitea tokens
   debug:
     msg: "Gitea tokens: {{ _ocp4_workload_mcp_gitea_tokens }}"
+    verbosity: 2
 
 - name: Set secret facts for LibreChat
   ansible.builtin.set_fact:
