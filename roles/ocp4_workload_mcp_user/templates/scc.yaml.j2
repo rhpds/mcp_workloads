@@ -2,7 +2,7 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: openshift-mcp-scc
+  name: mcpserver-scc
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false
@@ -29,8 +29,12 @@ seLinuxContext:
 supplementalGroups:
   type: RunAsAny
 users:
-- system:serviceaccount:mcp-{{ ocp4_workload_mcp_user}}:openshift-sa
-- system:serviceaccount:mcp-{{ ocp4_workload_mcp_user}}:openshift-proxy-runner
+{% for i in range(1, ocp4_workload_mcp_num_users + 1) %}
+- system:serviceaccount:{{ ocp4_workload_mcp_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:openshift-sa
+- system:serviceaccount:{{ ocp4_workload_mcp_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:openshift-proxy-runner
+- system:serviceaccount:{{ ocp4_workload_mcp_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:gitea-sa
+- system:serviceaccount:{{ ocp4_workload_mcp_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:gitea-proxy-runner
+{% endfor %}
 volumes:
 - configMap
 - downwardAPI

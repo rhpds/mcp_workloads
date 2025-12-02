@@ -1,29 +1,31 @@
 ---
-- name: Delete existing token for Gitea MCP Server
+- name: Delete existing tokens for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
-      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user
-      }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
+      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_user_base }}{{ item }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
     method: DELETE
     status_code: [204, 404, 422]
-    user: "{{ ocp4_workload_mcp_gitea_user }}"
-    password: "{{ ocp4_workload_mcp_gitea_password }}"
+    user: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
+    password: "{{ ocp4_workload_mcp_gitea_user_password }}"
     force_basic_auth: true
     validate_certs: true
+  loop: "{{ range(1, ocp4_workload_mcp_num_users + 1) | list }}"
+  loop_control:
+    label: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
 
 # Get Token for Gitea user
-# curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"industrial-edge","scopes":["write:repository"]}'
-#      -u ${GITEA_USER}:openshift ${GITEA_URL}/api/v1/users/lab-user/tokens
+# curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"mcp","scopes":["write:repository"]}'
+#      -u ${GITEA_USER}:openshift ${GITEA_URL}/api/v1/users/user1/tokens
 - name: Set up token for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
-      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user }}/tokens
+      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_user_base }}{{ item }}/tokens
     method: POST
     body: "{{ body }}"
     body_format: json
     status_code: 201
-    user: "{{ ocp4_workload_mcp_gitea_user }}"
-    password: "{{ ocp4_workload_mcp_gitea_password }}"
+    user: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
+    password: "{{ ocp4_workload_mcp_gitea_user_password }}"
     force_basic_auth: true
     validate_certs: true
   vars:
@@ -34,72 +36,40 @@
       - read:repository
       - read:issue
       - write:issue
-  register: r_gitea_token
+  loop: "{{ range(1, ocp4_workload_mcp_num_users + 1) | list }}"
+  loop_control:
+    label: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
+  register: r_gitea_tokens
 
-- name: Set Gitea token variable
+- name: Build Gitea tokens array
   ansible.builtin.set_fact:
-    _ocp4_workload_mcp_gitea_token: "{{ r_gitea_token.json.sha1 }}"
+    _ocp4_workload_mcp_gitea_tokens: "{{ r_gitea_tokens.results | map(attribute='json.sha1') | list }}"
+
+- name: Debug Gitea tokens
+  debug:
+    msg: "Gitea tokens: {{ _ocp4_workload_mcp_gitea_tokens }}"
+    verbosity: 2
 
 - name: Set secret facts for LibreChat
   ansible.builtin.set_fact:
     _ocp4_workload_mcp_librechat_key32: "{{ lookup('password', '/dev/null chars=hexdigits length=32') | lower }}"
     _ocp4_workload_mcp_librechat_key16: "{{ lookup('password', '/dev/null chars=hexdigits length=16') | lower }}"
 
-- name: Create MCP namespace
-  kubernetes.core.k8s:
-    state: present
-    api_version: v1
-    kind: Namespace
-    name: "{{ ocp4_workload_mcp_namespace }}"
-
-- name: Set up OpenShift MCP Server
+- name: Create MCP lab components
   kubernetes.core.k8s:
     state: present
     template: "{{ item }}"
   loop:
-  - mcp-openshift/scc.yaml.j2
-  - mcp-openshift/clusterrolebinding.yaml.j2
-  - mcp-openshift/mcpserver.yaml.j2
-  - mcp-openshift/route.yaml.j2
+  - scc.yaml.j2
+  - applicationset-mcp-openshift.yaml.j2
+  - applicationset-mcp-gitea.yaml.j2
+  - applicationset-librechat-config.yaml.j2
+  - applicationset-librechat.yaml.j2
+  - applicationset-agent.yaml.j2
 
-- name: Set up Gitea MCP Server
-  kubernetes.core.k8s:
-    state: present
-    template: "{{ item }}"
-  loop:
-  - mcp-gitea/scc.yaml.j2
-  - mcp-gitea/secret.yaml.j2
-  - mcp-gitea/mcpserver.yaml.j2
-  - mcp-gitea/route.yaml.j2
-
-- name: Create Librechat namespace
-  kubernetes.core.k8s:
-    state: present
-    api_version: v1
-    kind: Namespace
-    name: "{{ ocp4_workload_mcp_librechat_namespace }}"
-
-- name: Set up LibreChat
-  kubernetes.core.k8s:
-    state: present
-    template: "{{ item }}"
-  loop:
-  - librechat/secret.yaml.j2
-  - librechat/application.yaml.j2
-  - librechat/route.yaml.j2
-  - librechat/job-create-user.yaml
-
-- name: Get LibreChat route
-  kubernetes.core.k8s_info:
-    api_version: route.openshift.io/v1
-    kind: Route
-    name: librechat
-    namespace: "{{ ocp4_workload_mcp_librechat_namespace }}"
-  register: r_librechat_route
-
-- name: Save LibreChat access information
-  agnosticd.core.agnosticd_user_info:
-    data:
-      librechat_url: "https://{{ r_librechat_route.resources[0].spec.host }}"
-      librechat_user: "{{ ocp4_workload_mcp_librechat_email }}"
-      librechat_password: "{{ ocp4_workload_mcp_librechat_password }}"
+# - name: Save LibreChat access information
+#   agnosticd.core.agnosticd_user_info:
+#     data:
+#       librechat_url: "https://{{ r_librechat_route.resources[0].spec.host }}"
+#       librechat_user: "{{ ocp4_workload_mcp_librechat_email }}"
+#       librechat_password: "{{ ocp4_workload_mcp_librechat_password }}"
