@@ -1,15 +1,17 @@
 ---
-- name: Delete existing token for Gitea MCP Server
+- name: Delete existing tokens for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
-      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user
-      }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
+      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_user_base }}{{ item }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
     method: DELETE
     status_code: [204, 404, 422]
-    user: "{{ ocp4_workload_mcp_gitea_user }}"
+    user: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
     password: "{{ ocp4_workload_mcp_gitea_password }}"
     force_basic_auth: true
     validate_certs: true
+  loop: "{{ range(1, ocp4_workload_mcp_num_users + 1) | list }}"
+  loop_control:
+    label: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
 
 # Get Token for Gitea user
 # curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"mcp","scopes":["write:repository"]}'
@@ -17,12 +19,12 @@
 - name: Set up token for Gitea MCP Server
   ansible.builtin.uri:
     url: >-
-      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_gitea_user }}/tokens
+      {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_user_base }}{{ item }}/tokens
     method: POST
     body: "{{ body }}"
     body_format: json
     status_code: 201
-    user: "{{ ocp4_workload_mcp_gitea_user }}"
+    user: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
     password: "{{ ocp4_workload_mcp_gitea_password }}"
     force_basic_auth: true
     validate_certs: true
@@ -34,11 +36,18 @@
       - read:repository
       - read:issue
       - write:issue
-  register: r_gitea_token
+  loop: "{{ range(1, ocp4_workload_mcp_num_users + 1) | list }}"
+  loop_control:
+    label: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
+  register: r_gitea_tokens
 
-- name: Set Gitea token variable
+- name: Build Gitea tokens array
   ansible.builtin.set_fact:
-    _ocp4_workload_mcp_gitea_token: "{{ r_gitea_token.json.sha1 }}"
+    _ocp4_workload_mcp_gitea_tokens: "{{ r_gitea_tokens.results | map(attribute='json.sha1') | list }}"
+
+- name: Debug Gitea tokens
+  debug:
+    msg: "Gitea tokens: {{ _ocp4_workload_mcp_gitea_tokens }}"
 
 - name: Set secret facts for LibreChat
   ansible.builtin.set_fact:
