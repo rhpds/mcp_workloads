@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: mcp-openshift
+  name: mcp-gitea
   namespace: openshift-gitops
 spec:
   generators:
@@ -10,6 +10,7 @@ spec:
       elements:
 {% for n in range(1, ocp4_workload_mcp_num_users | int + 1 ) %}
       - user: {{ ocp4_workload_mcp_user_base }}{{ n }}
+        token: {{ _ocp4_workload_mcp_gitea_tokens[n-1] }}
 {% endfor %}
   template:
     metadata:
@@ -29,11 +30,14 @@ spec:
           selfHeal: false
       source:
         repoURL: {{ ocp4_workload_mcp_gitops_repo }}
-        path: {{ ocp4_workload_mcp_openshift_repo_path }}
+        path: {{ ocp4_workload_mcp_gitea_repo_path }}
         targetRevision: {{ ocp4_workload_mcp_gitops_repo_tag }}
         helm:
           values: |
-            fullnameOverride: mcp-openshift
+            fullnameOverride: mcp-gitea
             user: "{% raw %}{{ user }}{% endraw %}"
             namespace: "{{ ocp4_workload_mcp_openshift_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
-            image: {{ ocp4_workload_mcp_openshift_image }}
+            image: {{ ocp4_workload_mcp_gitea_image }}
+            giteaConfig:
+                url: {{ ocp4_workload_mcp_gitea_internal_url }}
+                token: "{% raw %}{{ token }}{% endraw %}"
