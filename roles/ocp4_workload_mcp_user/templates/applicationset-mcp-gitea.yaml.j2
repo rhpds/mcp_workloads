@@ -16,7 +16,7 @@ spec:
 {% endfor %}
   template:
     metadata:
-      name: "{{ ocp4_workload_mcp_gitea_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+      name: "mcp-gitea-{% raw %}{{ user }}{% endraw %}"
       namespace: openshift-gitops
       finalizers:
       - resources-finalizer.argocd.argoproj.io

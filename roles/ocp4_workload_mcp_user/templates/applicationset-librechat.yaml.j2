@@ -22,7 +22,7 @@ spec:
     spec:
       destination:
         name: ""
-        namespace: "{{ ocp4_workload_mcp_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+        namespace: "librechat-{% raw %}{{ user }}{% endraw %}"
         server: https://kubernetes.default.svc
       project: default
       syncPolicy:
