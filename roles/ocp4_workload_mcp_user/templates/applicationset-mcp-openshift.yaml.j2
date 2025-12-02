@@ -5,6 +5,8 @@ metadata:
   name: mcp-openshift
   namespace: openshift-gitops
 spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: false
   generators:
   - list:
       elements:
@@ -15,6 +17,8 @@ spec:
     metadata:
       name: "{{ ocp4_workload_mcp_openshift_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
       namespace: openshift-gitops
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
     spec:
       destination:
         name: ""
