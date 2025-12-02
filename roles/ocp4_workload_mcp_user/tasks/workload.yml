@@ -62,7 +62,7 @@
   - scc.yaml.j2
   - applicationset-mcp-openshift.yaml.j2
   - applicationset-mcp-gitea.yaml.j2
-  - applicationset-mcp-librechat-config.yaml.j2
+  - applicationset-librechat-config.yaml.j2
 
 # - name: Set up LibreChat
 #   kubernetes.core.k8s:
