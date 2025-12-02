@@ -59,6 +59,7 @@
     state: present
     template: "{{ item }}"
   loop:
+  - scc.yaml.j2
   - applicationset-mcp-openshift.yaml.j2
   - applicationset-mcp-gitea.yaml.j2
 
