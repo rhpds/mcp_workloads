@@ -54,43 +54,13 @@
     _ocp4_workload_mcp_librechat_key32: "{{ lookup('password', '/dev/null chars=hexdigits length=32') | lower }}"
     _ocp4_workload_mcp_librechat_key16: "{{ lookup('password', '/dev/null chars=hexdigits length=16') | lower }}"
 
-- name: Create OpenShift MCP Servers
+- name: Create MCP Servers
   kubernetes.core.k8s:
     state: present
-    template: applicationset-mcp-openshift.yaml.j2
-
-# - name: Create MCP namespace
-#   kubernetes.core.k8s:
-#     state: present
-#     api_version: v1
-#     kind: Namespace
-#     name: "{{ ocp4_workload_mcp_namespace }}"
-
-# - name: Grant permissions for user
-#   kubernetes.core.k8s:
-#     state: present
-#     template: rolebinding.yaml.j2
-
-# - name: Set up OpenShift MCP Server
-#   kubernetes.core.k8s:
-#     state: present
-#     template: "{{ item }}"
-#   loop:
-#   - mcp-openshift/scc.yaml.j2
-#   - mcp-openshift/clusterrolebinding.yaml.j2
-#   - mcp-openshift/clusterrolebinding-clusterview.yaml.j2
-#   - mcp-openshift/mcpserver.yaml.j2
-#   - mcp-openshift/route.yaml.j2
-
-# - name: Set up Gitea MCP Server
-#   kubernetes.core.k8s:
-#     state: present
-#     template: "{{ item }}"
-#   loop:
-#   - mcp-gitea/scc.yaml.j2
-#   - mcp-gitea/secret.yaml.j2
-#   - mcp-gitea/mcpserver.yaml.j2
-#   - mcp-gitea/route.yaml.j2
+    template: "{{ item }}"
+  loop:
+  - applicationset-mcp-openshift.yaml.j2
+  - applicationset-mcp-gitea.yaml.j2
 
 # - name: Create Librechat namespace
 #   kubernetes.core.k8s:
