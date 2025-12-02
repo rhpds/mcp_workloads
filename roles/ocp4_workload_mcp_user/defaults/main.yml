@@ -1,26 +1,35 @@
 ---
 # ------------------------------------------------
-# Set up one user for the MCP Demo/Lab
+# Set up environment for the MCP Demo/Lab
 # ------------------------------------------------
-ocp4_workload_mcp_user: user1
-ocp4_workload_mcp_namespace: "mcp-{{ ocp4_workload_mcp_user }}"
+ocp4_workload_mcp_num_users: 2
+ocp4_workload_mcp_user_base: user
+
+ocp4_workload_mcp_gitops_repo: https://github.com/rhpds/mcp_gitops
+ocp4_workload_mcp_gitops_repo_tag: main
+ocp4_workload_mcp_openshift_repo_path: helm/mcp-openshift
+
+ocp4_workload_mcp_openshift_namespace_base: mcp
+
 ocp4_workload_mcp_openshift_image: quay.io/containers/kubernetes_mcp_server:latest
-ocp4_workload_mcp_gitea_image: docker.gitea.com/gitea-mcp-server:latest
+
+
+
 
 # Gitea user should be created by the Gitea Operator workload
+ocp4_workload_mcp_gitea_image: docker.gitea.com/gitea-mcp-server:latest
 ocp4_workload_mcp_gitea_name: gitea
 ocp4_workload_mcp_gitea_namespace: gitea
 ocp4_workload_mcp_gitea_external_url: https://gitea.apps.mcp-gm8rr.dynamic.redhatworkshops.io
 ocp4_workload_mcp_gitea_internal_url: "http://{{ ocp4_workload_mcp_gitea_name }}.{{ ocp4_workload_mcp_gitea_namespace }}.svc:3000"
 ocp4_workload_mcp_gitea_repository: mcp
 ocp4_workload_mcp_gitea_user: "{{ ocp4_workload_mcp_user }}"
+# Gitea token to be passed
 ocp4_workload_mcp_gitea_password: ""
 
 
-ocp4_workload_mcp_num_users: 2
-ocp4_workload_mcp_user_base: user
 
-ocp4_workload_mcp_librechat_namespace: "librechat-{{ ocp4_workload_mcp_user }}"
+ocp4_workload_mcp_librechat_namespace_base: librechat
 ocp4_workload_mcp_librechat_repo: https://github.com/danny-avila/LibreChat
 ocp4_workload_mcp_librechat_repo_tag: v0.8.1-rc2
 ocp4_workload_mcp_librechat_repo_path: ./helm/librechat
@@ -33,3 +42,5 @@ ocp4_workload_mcp_librechat_user: "{{ ocp4_workload_mcp_user }}"
 ocp4_workload_mcp_librechat_email: "{{ ocp4_workload_mcp_user }}@example.com"
 # Set from secrets/vaults
 ocp4_workload_mcp_librechat_password: ""
+
+ocp4_workload_mcp_agent_namespace_base: agent
