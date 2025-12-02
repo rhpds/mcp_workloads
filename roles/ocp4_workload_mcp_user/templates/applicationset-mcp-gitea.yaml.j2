@@ -14,12 +14,12 @@ spec:
 {% endfor %}
   template:
     metadata:
-      name: "{{ ocp4_workload_mcp_openshift_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+      name: "{{ ocp4_workload_mcp_gitea_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
       namespace: openshift-gitops
     spec:
       destination:
         name: ""
-        namespace: "{{ ocp4_workload_mcp_openshift_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+        namespace: "{{ ocp4_workload_mcp_gitea_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
         server: https://kubernetes.default.svc
       project: default
       syncPolicy:
@@ -36,7 +36,7 @@ spec:
           values: |
             fullnameOverride: mcp-gitea
             user: "{% raw %}{{ user }}{% endraw %}"
-            namespace: "{{ ocp4_workload_mcp_openshift_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+            namespace: "{{ ocp4_workload_mcp_gitea_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
             image: {{ ocp4_workload_mcp_gitea_image }}
             giteaConfig:
                 url: {{ ocp4_workload_mcp_gitea_internal_url }}
