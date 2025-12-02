@@ -5,7 +5,9 @@
 ocp4_workload_mcp_num_users: 2
 ocp4_workload_mcp_user_base: user
 
+# -------------------------------------------------------------------
 # OpenShift MCP Server
+# -------------------------------------------------------------------
 ocp4_workload_mcp_gitops_repo: https://github.com/rhpds/mcp_gitops
 ocp4_workload_mcp_gitops_repo_tag: main
 ocp4_workload_mcp_openshift_repo_path: helm/mcp-openshift
@@ -13,7 +15,9 @@ ocp4_workload_mcp_openshift_repo_path: helm/mcp-openshift
 ocp4_workload_mcp_openshift_namespace_base: mcp-openshift
 ocp4_workload_mcp_openshift_image: quay.io/containers/kubernetes_mcp_server:latest
 
+# -------------------------------------------------------------------
 # Gitea MCP Server
+# -------------------------------------------------------------------
 ocp4_workload_mcp_gitea_repo_path: helm/mcp-gitea
 ocp4_workload_mcp_gitea_namespace_base: mcp-gitea
 # Gitea user should be created by the Gitea Operator workload
@@ -24,20 +28,28 @@ ocp4_workload_mcp_gitea_repository: mcp
 ocp4_workload_mcp_gitea_user_base: "{{ ocp4_workload_mcp_user_base }}"
 ocp4_workload_mcp_gitea_user_password: ""
 
+# -------------------------------------------------------------------
 # LibreChat
-
+# -------------------------------------------------------------------
 ocp4_workload_mcp_librechat_namespace_base: librechat
 ocp4_workload_mcp_librechat_repo: https://github.com/danny-avila/LibreChat
 ocp4_workload_mcp_librechat_repo_tag: v0.8.1-rc2
 ocp4_workload_mcp_librechat_repo_path: ./helm/librechat
+
+ocp4_workload_mcp_librechat_config_repo: "{{ ocp4_workload_mcp_gitops_repo }}"
+ocp4_workload_mcp_librechat_config_repo_tag: "{{ ocp4_workload_mcp_gitops_repo_tag }}"
+ocp4_workload_mcp_librechat_config_repo_path: ./helm/librechat
+
 # Set from secrets/vaults
 ocp4_workload_mcp_librechat_litemaas_key: ""
 ocp4_workload_mcp_librechat_litemaas_url: https://litellm.apps.maas.redhatworkshops.io/v1
-ocp4_workload_mcp_librechat_litemaas_models: ["granite-3-2-8b-instruct", "granite-8b-code-instruct-128k", "mistral-7b-instruct", "codellama-7b","Llama-Guard-3-1B"]
+ocp4_workload_mcp_librechat_litemaas_models: ["openai/Llama-4-Scout-17B-16E-W4A16"]
 
-ocp4_workload_mcp_librechat_user: "{{ ocp4_workload_mcp_user }}"
-ocp4_workload_mcp_librechat_email: "{{ ocp4_workload_mcp_user }}@example.com"
+ocp4_workload_mcp_librechat_email_domain: "example.com"
 # Set from secrets/vaults
 ocp4_workload_mcp_librechat_password: ""
 
+# -------------------------------------------------------------------
+# Agent
+# -------------------------------------------------------------------
 ocp4_workload_mcp_agent_namespace_base: agent

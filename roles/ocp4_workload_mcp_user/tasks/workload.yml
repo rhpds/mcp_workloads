@@ -54,7 +54,7 @@
     _ocp4_workload_mcp_librechat_key32: "{{ lookup('password', '/dev/null chars=hexdigits length=32') | lower }}"
     _ocp4_workload_mcp_librechat_key16: "{{ lookup('password', '/dev/null chars=hexdigits length=16') | lower }}"
 
-- name: Create MCP Servers
+- name: Create MCP lab components
   kubernetes.core.k8s:
     state: present
     template: "{{ item }}"
@@ -62,13 +62,7 @@
   - scc.yaml.j2
   - applicationset-mcp-openshift.yaml.j2
   - applicationset-mcp-gitea.yaml.j2
-
-# - name: Create Librechat namespace
-#   kubernetes.core.k8s:
-#     state: present
-#     api_version: v1
-#     kind: Namespace
-#     name: "{{ ocp4_workload_mcp_librechat_namespace }}"
+  - applicationset-mcp-librechat-config.yaml.j2
 
 # - name: Set up LibreChat
 #   kubernetes.core.k8s:
