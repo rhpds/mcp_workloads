@@ -43,7 +43,7 @@ ocp4_workload_mcp_librechat_config_repo_path: ./helm/librechat
 # Set from secrets/vaults
 ocp4_workload_mcp_librechat_litemaas_key: ""
 ocp4_workload_mcp_librechat_litemaas_url: https://litellm.apps.maas.redhatworkshops.io/v1
-ocp4_workload_mcp_librechat_litemaas_models: ["openai/Llama-4-Scout-17B-16E-W4A16"]
+ocp4_workload_mcp_librechat_litemaas_models: ["Llama-4-Scout-17B-16E-W4A16"]
 
 ocp4_workload_mcp_librechat_email_domain: "example.com"
 # Set from secrets/vaults
