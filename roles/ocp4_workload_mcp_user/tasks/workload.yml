@@ -64,25 +64,7 @@
   - applicationset-mcp-gitea.yaml.j2
   - applicationset-librechat-config.yaml.j2
   - applicationset-librechat.yaml.j2
-
-# - name: Set up LibreChat
-#   kubernetes.core.k8s:
-#     state: present
-#     template: "{{ item }}"
-#   loop:
-#   - librechat/secret.yaml.j2
-#   - librechat/application.yaml.j2
-#   - librechat/route.yaml.j2
-#   - librechat/job-create-user.yaml
-#   - librechat/rolebinding.yaml.j2
-
-# - name: Get LibreChat route
-#   kubernetes.core.k8s_info:
-#     api_version: route.openshift.io/v1
-#     kind: Route
-#     name: librechat
-#     namespace: "{{ ocp4_workload_mcp_librechat_namespace }}"
-#   register: r_librechat_route
+  - applicationset-agent.yaml.j2
 
 # - name: Save LibreChat access information
 #   agnosticd.core.agnosticd_user_info:

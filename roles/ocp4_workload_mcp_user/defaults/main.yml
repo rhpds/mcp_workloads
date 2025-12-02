@@ -5,6 +5,11 @@
 ocp4_workload_mcp_num_users: 2
 ocp4_workload_mcp_user_base: user
 
+# LiteMaaS credentials - set from secrets/vaults
+ocp4_workload_mcp_litemaas_key: ""
+ocp4_workload_mcp_litemaas_url: https://litellm.apps.maas.redhatworkshops.io/v1
+ocp4_workload_mcp_litemaas_models: ["Llama-4-Scout-17B-16E-W4A16"]
+
 # -------------------------------------------------------------------
 # OpenShift MCP Server
 # -------------------------------------------------------------------
@@ -40,11 +45,6 @@ ocp4_workload_mcp_librechat_config_repo: "{{ ocp4_workload_mcp_gitops_repo }}"
 ocp4_workload_mcp_librechat_config_repo_tag: "{{ ocp4_workload_mcp_gitops_repo_tag }}"
 ocp4_workload_mcp_librechat_config_repo_path: ./helm/librechat
 
-# Set from secrets/vaults
-ocp4_workload_mcp_librechat_litemaas_key: ""
-ocp4_workload_mcp_librechat_litemaas_url: https://litellm.apps.maas.redhatworkshops.io/v1
-ocp4_workload_mcp_librechat_litemaas_models: ["Llama-4-Scout-17B-16E-W4A16"]
-
 ocp4_workload_mcp_librechat_email_domain: "example.com"
 # Set from secrets/vaults
 ocp4_workload_mcp_librechat_password: ""
@@ -52,4 +52,5 @@ ocp4_workload_mcp_librechat_password: ""
 # -------------------------------------------------------------------
 # Agent
 # -------------------------------------------------------------------
+ocp4_workload_mcp_agent_repo_path: helm/agent
 ocp4_workload_mcp_agent_namespace_base: agent
