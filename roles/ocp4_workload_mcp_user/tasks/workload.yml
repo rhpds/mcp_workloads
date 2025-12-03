@@ -1,5 +1,5 @@
 ---
-- name: Delete existing tokens for Gitea MCP Server
+- name: Delete existing Gitea tokens
   ansible.builtin.uri:
     url: >-
       {{ ocp4_workload_mcp_gitea_external_url }}/api/v1/users/{{ ocp4_workload_mcp_user_base }}{{ item }}/tokens/{{ ocp4_workload_mcp_gitea_repository }}
@@ -13,7 +13,7 @@
   loop_control:
     label: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
 
-# Get Token for Gitea user
+# Get tokens for Gitea users
 # curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"mcp","scopes":["write:repository"]}'
 #      -u ${GITEA_USER}:openshift ${GITEA_URL}/api/v1/users/user1/tokens
 - name: Set up token for Gitea MCP Server
@@ -41,20 +41,18 @@
     label: "{{ ocp4_workload_mcp_user_base }}{{ item }}"
   register: r_gitea_tokens
 
-- name: Build Gitea tokens array
+- name: Build Gitea tokens array and set secret facts for LibreChat
   ansible.builtin.set_fact:
     _ocp4_workload_mcp_gitea_tokens: "{{ r_gitea_tokens.results | map(attribute='json.sha1') | list }}"
+    _ocp4_workload_mcp_librechat_key32: "{{ lookup('password', '/dev/null chars=hexdigits length=32') | lower }}"
+    _ocp4_workload_mcp_librechat_key16: "{{ lookup('password', '/dev/null chars=hexdigits length=16') | lower }}"
 
 - name: Debug Gitea tokens
   debug:
     msg: "Gitea tokens: {{ _ocp4_workload_mcp_gitea_tokens }}"
     verbosity: 2
 
-- name: Set secret facts for LibreChat
-  ansible.builtin.set_fact:
-    _ocp4_workload_mcp_librechat_key32: "{{ lookup('password', '/dev/null chars=hexdigits length=32') | lower }}"
-    _ocp4_workload_mcp_librechat_key16: "{{ lookup('password', '/dev/null chars=hexdigits length=16') | lower }}"
-
+# TBD: Get LiteMaaS credentials from the workload before when models work on LiteMaaS
 - name: Create MCP lab components
   kubernetes.core.k8s:
     state: present
@@ -67,9 +65,16 @@
   - applicationset-librechat.yaml.j2
   - applicationset-agent.yaml.j2
 
-# - name: Save LibreChat access information
-#   agnosticd.core.agnosticd_user_info:
-#     data:
-#       librechat_url: "https://{{ r_librechat_route.resources[0].spec.host }}"
-#       librechat_user: "{{ ocp4_workload_mcp_librechat_email }}"
-#       librechat_password: "{{ ocp4_workload_mcp_librechat_password }}"
+- name: Save user information
+  agnosticd.core.agnosticd_user_info:
+    user: "{{ ocp4_workload_mcp_user_base }}{{ n + 1 }}"
+    data:
+      user: "{{ ocp4_workload_mcp_user_base }}{{ n + 1 }}"
+      librechat_url: "https://librechat-{{ ocp4_workload_mcp_librechat_namespace_base }}-{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
+      librechat_user: "{{ ocp4_workload_mcp_librechat_email }}"
+      librechat_password: "{{ ocp4_workload_mcp_librechat_password }}"
+      openshift_mcp_server_url: "https://mcp-openshift-{{ ocp4_workload_mcp_openshift_namespace_base }}-{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
+      gitea_mcp_server_url: "https://mcp-gitea-{{ ocp4_workload_mcp_gitea_namespace_base }}-{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
+  loop: "{{ range(0, ocp4_workload_mcp_num_users | int) | list }}"
+  loop_control:
+    loop_var: n
