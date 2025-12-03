@@ -12,6 +12,7 @@ spec:
       elements:
 {% for n in range(1, ocp4_workload_mcp_num_users | int + 1 ) %}
       - user: {{ ocp4_workload_mcp_user_base }}{{ n }}
+        litemaas_key: {{ ocp4_workload_mcp_litemaas_keys[n | int - 1] }}
 {% endfor %}
   template:
     metadata:
@@ -58,7 +59,7 @@ spec:
               # Custom Model Endpoint
               custom_model_url: {{ ocp4_workload_mcp_litemaas_url }}
               # Key for the MaaS
-              custom_model_key: {{ ocp4_workload_mcp_litemaas_key }}
+              custom_model_key: "{% raw %}{{ litemaas_key }}{% endraw %}"
 
             # Default user credentials (used by user-init-job.yaml)
             default_user:
