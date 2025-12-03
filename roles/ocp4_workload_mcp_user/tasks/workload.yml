@@ -71,7 +71,7 @@
     data:
       user: "{{ ocp4_workload_mcp_user_base }}{{ n + 1 }}"
       librechat_url: "https://librechat-{{ ocp4_workload_mcp_librechat_namespace_base }}-{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
-      librechat_user: "{{ ocp4_workload_mcp_librechat_email }}"
+      librechat_user: "{{ ocp4_workload_mcp_user_base }}{{ n + 1 }}@{{ ocp4_workload_mcp_librechat_email_domain }}"
       librechat_password: "{{ ocp4_workload_mcp_librechat_password }}"
       openshift_mcp_server_url: "https://mcp-openshift-{{ ocp4_workload_mcp_openshift_namespace_base }}-{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
       gitea_mcp_server_url: "https://mcp-gitea-{{ ocp4_workload_mcp_gitea_namespace_base }}-{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
