@@ -32,7 +32,7 @@ spec:
           prune: true
           selfHeal: false
       source:
-        repoURL: "{{ ocp4_workload_mcp_gitea_internal_url }}-{% raw %}{{ user }}{% endraw %}/{{ ocp4_workload_mcp_gitea_repository }}"
+        repoURL: "{{ ocp4_workload_mcp_gitea_internal_url }}/{% raw %}{{ user }}{% endraw %}/{{ ocp4_workload_mcp_gitea_repository }}"
         path: {{ ocp4_workload_mcp_openshift_repo_path }}
         targetRevision: {{ ocp4_workload_mcp_gitops_repo_tag }}
         helm:
