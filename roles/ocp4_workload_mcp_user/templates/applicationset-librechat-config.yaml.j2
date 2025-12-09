@@ -10,9 +10,9 @@ spec:
   generators:
   - list:
       elements:
-{% for n in range(1, ocp4_workload_mcp_num_users | int + 1 ) %}
-      - user: {{ ocp4_workload_mcp_user_base }}{{ n }}
-        litemaas_key: {{ ocp4_workload_mcp_litemaas_keys[n | int - 1] }}
+{% for n in range(1, ocp4_workload_mcp_user_num_users | int + 1 ) %}
+      - user: {{ ocp4_workload_mcp_user_user_base }}{{ n }}
+        litemaas_key: {{ ocp4_workload_mcp_user_litemaas_keys[n | int - 1] }}
 {% endfor %}
   template:
     metadata:
@@ -23,7 +23,7 @@ spec:
     spec:
       destination:
         name: ""
-        namespace: "{{ ocp4_workload_mcp_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+        namespace: "{{ ocp4_workload_mcp_user_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
         server: https://kubernetes.default.svc
       project: default
       syncPolicy:
@@ -33,31 +33,31 @@ spec:
           prune: true
           selfHeal: false
       source:
-        repoURL: "{{ ocp4_workload_mcp_gitea_internal_url }}/{% raw %}{{ user }}{% endraw %}/{{ ocp4_workload_mcp_gitea_repository }}"
-        path: {{ ocp4_workload_mcp_librechat_config_repo_path }}
-        targetRevision: {{ ocp4_workload_mcp_gitops_repo_tag }}
+        repoURL: "{{ ocp4_workload_mcp_user_gitea_internal_url }}/{% raw %}{{ user }}{% endraw %}/{{ ocp4_workload_mcp_user_gitea_repository }}"
+        path: {{ ocp4_workload_mcp_user_librechat_config_repo_path }}
+        targetRevision: {{ ocp4_workload_mcp_user_gitops_repo_tag }}
         helm:
           values: |
             fullnameOverride: librechat-config
 
             user: "{% raw %}{{ user }}{% endraw %}"
             application_name: librechat
-            namespace: "{{ ocp4_workload_mcp_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
+            namespace: "{{ ocp4_workload_mcp_user_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
 
             secrets:
               # Required: LibreChat internal encryption and JWT secrets
               # Generate random secrets using: openssl rand -hex 32
               # Or use: https://www.librechat.ai/toolkit/creds_generator
-              creds_key: {{ _ocp4_workload_mcp_librechat_key32 }}
-              jwt_secret: {{ _ocp4_workload_mcp_librechat_key32 }}
-              jwt_refresh_secret: {{ _ocp4_workload_mcp_librechat_key32 }}
+              creds_key: {{ _ocp4_workload_mcp_user_librechat_key32 }}
+              jwt_secret: {{ _ocp4_workload_mcp_user_librechat_key32 }}
+              jwt_refresh_secret: {{ _ocp4_workload_mcp_user_librechat_key32 }}
 
               # Required: Meilisearch master key
               # Generate using: openssl rand -hex 16
-              meili_master_key: {{ _ocp4_workload_mcp_librechat_key16 }}
+              meili_master_key: {{ _ocp4_workload_mcp_user_librechat_key16 }}
 
               # Custom Model Endpoint
-              custom_model_url: {{ ocp4_workload_mcp_litemaas_url }}
+              custom_model_url: {{ ocp4_workload_mcp_user_litemaas_url }}
               # Key for the MaaS
               custom_model_key: "{% raw %}{{ litemaas_key }}{% endraw %}"
 
@@ -65,5 +65,5 @@ spec:
             default_user:
               setup: true
               name: "{% raw %}{{ user }}{% endraw %}"
-              email: "{% raw %}{{ user }}{% endraw %}@{{ ocp4_workload_mcp_librechat_email_domain }}"
-              password: {{ ocp4_workload_mcp_librechat_password }}
+              email: "{% raw %}{{ user }}{% endraw %}@{{ ocp4_workload_mcp_user_librechat_email_domain }}"
+              password: {{ ocp4_workload_mcp_user_librechat_password }}
