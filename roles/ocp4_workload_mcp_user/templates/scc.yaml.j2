@@ -29,11 +29,11 @@ seLinuxContext:
 supplementalGroups:
   type: RunAsAny
 users:
-{% for i in range(1, ocp4_workload_mcp_num_users + 1) %}
-- system:serviceaccount:{{ ocp4_workload_mcp_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:openshift-sa
-- system:serviceaccount:{{ ocp4_workload_mcp_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:openshift-proxy-runner
-- system:serviceaccount:{{ ocp4_workload_mcp_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:gitea-sa
-- system:serviceaccount:{{ ocp4_workload_mcp_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_base }}{{ i }}:gitea-proxy-runner
+{% for i in range(1, ocp4_workload_mcp_user_num_users + 1) %}
+- system:serviceaccount:{{ ocp4_workload_mcp_user_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ i }}:openshift-sa
+- system:serviceaccount:{{ ocp4_workload_mcp_user_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ i }}:openshift-proxy-runner
+- system:serviceaccount:{{ ocp4_workload_mcp_user_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ i }}:gitea-sa
+- system:serviceaccount:{{ ocp4_workload_mcp_user_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ i }}:gitea-proxy-runner
 {% endfor %}
 volumes:
 - configMap

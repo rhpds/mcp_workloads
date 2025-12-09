@@ -1,4 +1,4 @@
 ---
-_ocp4_workload_mcp_gitea_tokens: []
-_ocp4_workload_mcp_librechat_key32: ""
-_ocp4_workload_mcp_librechat_key16: ""
+_ocp4_workload_mcp_user_gitea_tokens: []
+_ocp4_workload_mcp_user_librechat_key32: ""
+_ocp4_workload_mcp_user_librechat_key16: ""
