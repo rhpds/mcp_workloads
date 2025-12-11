@@ -1,0 +1,404 @@
+= rhpds.mcp_workloads
+:toc: macro
+:toc-title: Table of Contents
+:toclevels: 3
+
+An Ansible collection for deploying MCP (Model Context Protocol) demo and lab environments on Red Hat OpenShift.
+
+toc::[]
+
+== Overview
+
+This collection provides automation for setting up a complete MCP demonstration environment, including:
+
+* *MCP OpenShift Server* - Kubernetes/OpenShift MCP server for cluster interaction
+* *MCP Gitea Server* - Git repository MCP server integration
+* *LibreChat* - AI chat interface with MCP support
+* *AI Agent* - Autonomous agent service
+
+The collection uses GitOps (ArgoCD ApplicationSets) to deploy and manage all components.
+
+== Collection Information
+
+[cols="1,2"]
+|===
+|Namespace |`rhpds`
+|Name |`mcp_workloads`
+|Version |1.0.0
+|License |GPL-2.0-or-later
+|Author |Wolfgang Kulhanek <wkulhane@redhat.com>
+|===
+
+== Prerequisites
+
+* Red Hat OpenShift 4.x cluster
+* OpenShift GitOps (ArgoCD) installed and configured
+* Gitea instance with users pre-configured (typically via Gitea Operator)
+* LiteMaaS or compatible LLM API endpoint
+* `kubernetes.core` Ansible collection installed
+* `agnosticd.core` Ansible collection installed
+
+== Installation
+
+Install the collection from Ansible Galaxy:
+
+[source,bash]
+----
+ansible-galaxy collection install rhpds.mcp_workloads
+----
+
+Or include in your `requirements.yml`:
+
+[source,yaml]
+----
+collections:
+  - name: rhpds.mcp_workloads
+    version: ">=1.0.0"
+----
+
+== Roles
+
+=== ocp4_workload_mcp_user
+
+Deploys a complete MCP lab environment for multiple users on OpenShift.
+
+==== Description
+
+This role provisions:
+
+. *Gitea API Tokens* - Creates tokens for each user to enable MCP Gitea integration
+. *MCP OpenShift Server* - Per-user MCP server for OpenShift/Kubernetes API interactions
+. *MCP Gitea Server* - Per-user MCP server for Git repository operations
+. *LibreChat* - Per-user AI chat interface preconfigured with MCP endpoints
+. *AI Agent* - Per-user autonomous agent service
+. *Metrics Access* - Optionally enables user workload monitoring in OpenShift
+
+==== Actions
+
+The role supports two actions controlled by the `ACTION` variable:
+
+* `provision` - Deploy the MCP workload environment
+* `destroy` - Remove the deployed workload (not fully implemented)
+
+==== Variables
+
+===== User Configuration
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_num_users`
+|`2`
+|Number of users to provision
+
+|`ocp4_workload_mcp_user_user_base`
+|`user`
+|Base username prefix (users will be `user1`, `user2`, etc.)
+|===
+
+===== LiteMaaS Configuration
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_litemaas_url`
+|`https://litellm.apps.maas.redhatworkshops.io/v1`
+|LiteMaaS API endpoint URL
+
+|`ocp4_workload_mcp_user_litemaas_keys`
+|`[]`
+|List of API keys for LiteMaaS (set from secrets/vaults)
+
+|`ocp4_workload_mcp_user_litemaas_models`
+|`["llama-scout-17b"]`
+|List of available AI models
+|===
+
+===== OpenShift MCP Server
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_gitops_repo`
+|`https://github.com/rhpds/mcp-gitops`
+|GitOps repository URL
+
+|`ocp4_workload_mcp_user_gitops_repo_tag`
+|`main`
+|Git branch/tag to use
+
+|`ocp4_workload_mcp_user_openshift_repo_path`
+|`helm/mcp-openshift`
+|Path to Helm chart in GitOps repo
+
+|`ocp4_workload_mcp_user_openshift_namespace_base`
+|`mcp-openshift`
+|Base namespace for OpenShift MCP server
+
+|`ocp4_workload_mcp_user_openshift_image`
+|`quay.io/containers/kubernetes_mcp_server:latest`
+|Container image for OpenShift MCP server
+|===
+
+===== Gitea MCP Server
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_gitea_repo_path`
+|`helm/mcp-gitea`
+|Path to Helm chart in GitOps repo
+
+|`ocp4_workload_mcp_user_gitea_namespace_base`
+|`mcp-gitea`
+|Base namespace for Gitea MCP server
+
+|`ocp4_workload_mcp_user_gitea_image`
+|`docker.gitea.com/gitea-mcp-server:latest`
+|Container image for Gitea MCP server
+
+|`ocp4_workload_mcp_user_gitea_external_url`
+|`https://gitea.{{ openshift_cluster_ingress_domain }}`
+|External Gitea URL
+
+|`ocp4_workload_mcp_user_gitea_internal_url`
+|`http://gitea.gitea.svc.cluster.local:3000`
+|Internal Gitea service URL
+
+|`ocp4_workload_mcp_user_gitea_repository`
+|`mcp`
+|Default repository name
+
+|`ocp4_workload_mcp_user_gitea_user_base`
+|`{{ ocp4_workload_mcp_user_user_base }}`
+|Base username for Gitea (matches user base)
+
+|`ocp4_workload_mcp_user_gitea_user_password`
+|`""`
+|Gitea user password (set from secrets/vaults)
+|===
+
+===== LibreChat
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_librechat_namespace_base`
+|`librechat`
+|Base namespace for LibreChat
+
+|`ocp4_workload_mcp_user_librechat_repo`
+|`https://github.com/danny-avila/LibreChat`
+|LibreChat Helm chart repository
+
+|`ocp4_workload_mcp_user_librechat_repo_tag`
+|`v0.8.1-rc2`
+|LibreChat version/tag
+
+|`ocp4_workload_mcp_user_librechat_repo_path`
+|`./helm/librechat`
+|Path to LibreChat Helm chart
+
+|`ocp4_workload_mcp_user_librechat_config_repo_path`
+|`./helm/librechat`
+|Path to LibreChat config chart
+
+|`ocp4_workload_mcp_user_librechat_email_domain`
+|`example.com`
+|Email domain for LibreChat user accounts
+
+|`ocp4_workload_mcp_user_librechat_password`
+|`""`
+|LibreChat user password (set from secrets/vaults)
+|===
+
+===== Agent
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_agent_repo_path`
+|`helm/agent`
+|Path to Agent Helm chart in GitOps repo
+
+|`ocp4_workload_mcp_user_agent_namespace_base`
+|`agent`
+|Base namespace for Agent service
+
+|`ocp4_workload_mcp_user_agent_model_name`
+|`openai/llama-scout-17b`
+|AI model for the agent
+|===
+
+===== Metrics
+
+[cols="3,1,3"]
+|===
+|Variable |Default |Description
+
+|`ocp4_workload_mcp_user_metrics_enable`
+|`true`
+|Enable user workload monitoring and metrics access
+|===
+
+==== Required Variables (Secrets)
+
+The following variables must be provided from secure sources (Ansible Vault, external secrets manager):
+
+* `ocp4_workload_mcp_user_litemaas_keys` - LiteMaaS API keys
+* `ocp4_workload_mcp_user_gitea_user_password` - Gitea user password
+* `ocp4_workload_mcp_user_librechat_password` - LibreChat user password
+
+==== Usage Example
+
+[source,yaml]
+----
+- name: Deploy MCP Demo Environment
+  hosts: localhost
+  vars:
+    ACTION: provision
+    ocp4_workload_mcp_user_num_users: 5
+    ocp4_workload_mcp_user_user_base: student
+    ocp4_workload_mcp_user_gitea_user_password: "{{ vault_gitea_password }}"
+    ocp4_workload_mcp_user_librechat_password: "{{ vault_librechat_password }}"
+    ocp4_workload_mcp_user_litemaas_keys:
+      - "{{ vault_litemaas_key_1 }}"
+      - "{{ vault_litemaas_key_2 }}"
+  roles:
+    - rhpds.mcp_workloads.ocp4_workload_mcp_user
+----
+
+==== User Information Output
+
+After provisioning, the role saves user-specific information using `agnosticd.core.agnosticd_user_info`:
+
+[cols="2,3"]
+|===
+|Key |Description
+
+|`user`
+|Username (e.g., `user1`)
+
+|`librechat_url`
+|LibreChat instance URL
+
+|`librechat_user`
+|LibreChat login email
+
+|`librechat_password`
+|LibreChat password
+
+|`openshift_mcp_server_url`
+|OpenShift MCP server SSE endpoint
+
+|`gitea_mcp_server_url`
+|Gitea MCP server endpoint
+|===
+
+== Components Deployed
+
+=== ArgoCD ApplicationSets
+
+The role creates the following ArgoCD ApplicationSets:
+
+. *applicationset-mcp-openshift* - MCP server for Kubernetes/OpenShift API
+. *applicationset-mcp-gitea* - MCP server for Gitea Git operations
+. *applicationset-librechat-config* - LibreChat configuration
+. *applicationset-librechat* - LibreChat application
+. *applicationset-agent* - AI Agent service
+
+=== Security Context Constraint
+
+A custom SCC is created to allow the MCP containers to run with the required permissions.
+
+=== Monitoring Configuration
+
+When `ocp4_workload_mcp_user_metrics_enable` is `true`:
+
+* User workload monitoring is enabled via ConfigMap
+* Developer perspective is enabled in the OpenShift console for observability
+
+== Architecture
+
+[source]
+----
+                     +-------------------+
+                     |   OpenShift       |
+                     |   GitOps/ArgoCD   |
+                     +--------+----------+
+                              |
+         +--------------------+--------------------+
+         |                    |                    |
+         v                    v                    v
++--------+--------+  +--------+--------+  +--------+--------+
+|  MCP OpenShift  |  |   MCP Gitea     |  |   LibreChat     |
+|  Server         |  |   Server        |  |   + Agent       |
+|  (per user)     |  |   (per user)    |  |   (per user)    |
++-----------------+  +-----------------+  +-----------------+
+         |                    |                    |
+         v                    v                    v
++--------+--------+  +--------+--------+  +--------+--------+
+| OpenShift API   |  | Gitea API       |  | LiteMaaS LLM    |
++-----------------+  +-----------------+  +-----------------+
+----
+
+== Troubleshooting
+
+=== Common Issues
+
+*Gitea token creation fails*::
+Ensure the Gitea users exist and the password is correct. Verify Gitea is accessible at the configured URL.
+
+*ApplicationSets not syncing*::
+Check ArgoCD logs and ensure the GitOps repository is accessible. Verify the repository path and tag are correct.
+
+*LibreChat not accessible*::
+Verify the OpenShift routes are created and the ingress domain is correct.
+
+=== Debugging
+
+Enable verbose output:
+
+[source,bash]
+----
+ansible-playbook playbook.yml -vvv
+----
+
+Check ArgoCD application status:
+
+[source,bash]
+----
+oc get applications -n openshift-gitops
+oc describe application <app-name> -n openshift-gitops
+----
+
+== Dependencies
+
+=== Ansible Collections
+
+* `kubernetes.core` - Kubernetes resource management
+* `agnosticd.core` - AgnosticD user info module
+
+=== External Dependencies
+
+* OpenShift GitOps Operator (ArgoCD)
+* Gitea instance (typically deployed via Gitea Operator)
+* LiteMaaS or compatible LLM API
+
+== License
+
+GPL-2.0-or-later
+
+== Author
+
+Wolfgang Kulhanek <wkulhane@redhat.com>
+
+== Contributing
+
+Issues and pull requests are welcome at the project repository.
