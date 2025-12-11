@@ -52,3 +52,8 @@ ocp4_workload_mcp_user_librechat_password: ""
 ocp4_workload_mcp_user_agent_repo_path: helm/agent
 ocp4_workload_mcp_user_agent_namespace_base: agent
 ocp4_workload_mcp_user_agent_model_name: "openai/llama-scout-17b"
+
+# -------------------------------------------------------------------
+# Metrics access
+# -------------------------------------------------------------------
+ocp4_workload_mcp_user_metrics_enable: true

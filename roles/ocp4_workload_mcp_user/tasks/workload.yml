@@ -52,7 +52,6 @@
     msg: "Gitea tokens: {{ _ocp4_workload_mcp_user_gitea_tokens }}"
     verbosity: 2
 
-# TBD: Get LiteMaaS credentials from the workload before when models work on LiteMaaS
 - name: Create MCP lab components
   kubernetes.core.k8s:
     state: present
@@ -64,6 +63,29 @@
   - applicationset-librechat-config.yaml.j2
   - applicationset-librechat.yaml.j2
   - applicationset-agent.yaml.j2
+
+- name: Enable metrics access for regular users
+  when: ocp4_workload_mcp_user_metrics_enable | bool
+  block:
+  - name: Create user monitoring ConfigMap
+    kubernetes.core.k8s:
+      state: present
+      definition: "{{ lookup('file', 'configmap-user-monitoring.yaml') | from_yaml }}"
+
+  - name: Enable dev perspective in OpenShift console for Observability
+    kubernetes.core.k8s:
+      state: patched
+      api_version: console.operator.openshift.io/v1
+      kind: Console
+      name: cluster
+      merge_type: merge
+      definition:
+        spec:
+          customization:
+            perspectives:
+            - id: dev
+              visibility:
+                state: Enabled
 
 - name: Save user information
   agnosticd.core.agnosticd_user_info:
