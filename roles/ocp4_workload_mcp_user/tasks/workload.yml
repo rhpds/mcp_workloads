@@ -75,7 +75,7 @@
   - name: Enable dev perspective in OpenShift console for Observability
     kubernetes.core.k8s:
       state: patched
-      api_version: console.operator.openshift.io/v1
+      api_version: operator.openshift.io/v1
       kind: Console
       name: cluster
       merge_type: merge
