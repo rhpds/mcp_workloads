@@ -38,7 +38,7 @@ ocp4_workload_mcp_user_gitea_user_password: ""
 # -------------------------------------------------------------------
 ocp4_workload_mcp_user_librechat_namespace_base: librechat
 ocp4_workload_mcp_user_librechat_repo: https://github.com/danny-avila/LibreChat
-ocp4_workload_mcp_user_librechat_repo_tag: v0.8.1-rc2
+ocp4_workload_mcp_user_librechat_repo_tag: v0.8.1
 ocp4_workload_mcp_user_librechat_repo_path: ./helm/librechat
 
 ocp4_workload_mcp_user_librechat_config_repo_path: ./helm/librechat
