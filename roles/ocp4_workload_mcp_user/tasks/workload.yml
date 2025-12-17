@@ -9,7 +9,7 @@
     password: "{{ ocp4_workload_mcp_user_gitea_user_password }}"
     force_basic_auth: true
     validate_certs: true
-  loop: "{{ range(1, (ocp4_workload_mcp_user_num_users | int) + 1) | list }}"
+  loop: "{{ range(1, ocp4_workload_mcp_user_num_users | int + 1) | list }}"
   loop_control:
     label: "{{ ocp4_workload_mcp_user_user_base }}{{ item }}"
 
@@ -36,7 +36,7 @@
       - read:repository
       - read:issue
       - write:issue
-  loop: "{{ range(1, (ocp4_workload_mcp_user_num_users | int) + 1) | list }}"
+  loop: "{{ range(1, ocp4_workload_mcp_user_num_users | int + 1) | list }}"
   loop_control:
     label: "{{ ocp4_workload_mcp_user_user_base }}{{ item }}"
   register: r_gitea_tokens
@@ -89,14 +89,14 @@
 
 - name: Save user information
   agnosticd.core.agnosticd_user_info:
-    user: "{{ ocp4_workload_mcp_user_user_base }}{{ n + 1 }}"
+    user: "{{ ocp4_workload_mcp_user_user_base }}{{ n }}"
     data:
-      user: "{{ ocp4_workload_mcp_user_user_base }}{{ n + 1 }}"
-      librechat_url: "https://librechat-{{ ocp4_workload_mcp_user_librechat_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}"
-      librechat_user: "{{ ocp4_workload_mcp_user_user_base }}{{ n + 1 }}@{{ ocp4_workload_mcp_user_librechat_email_domain }}"
+      user: "{{ ocp4_workload_mcp_user_user_base }}{{ n }}"
+      librechat_url: "https://librechat-{{ ocp4_workload_mcp_user_librechat_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ n }}.{{ openshift_cluster_ingress_domain }}"
+      librechat_user: "{{ ocp4_workload_mcp_user_user_base }}{{ n }}@{{ ocp4_workload_mcp_user_librechat_email_domain }}"
       librechat_password: "{{ ocp4_workload_mcp_user_librechat_password }}"
-      openshift_mcp_server_url: "https://mcp-openshift-{{ ocp4_workload_mcp_user_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}/sse#openshift"
-      gitea_mcp_server_url: "https://mcp-gitea-{{ ocp4_workload_mcp_user_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ n + 1 }}.{{ openshift_cluster_ingress_domain }}/mcp"
-  loop: "{{ range(0, ocp4_workload_mcp_user_num_users | int) | list }}"
+      openshift_mcp_server_url: "https://mcp-openshift-{{ ocp4_workload_mcp_user_openshift_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ n }}.{{ openshift_cluster_ingress_domain }}/sse#openshift"
+      gitea_mcp_server_url: "https://mcp-gitea-{{ ocp4_workload_mcp_user_gitea_namespace_base }}-{{ ocp4_workload_mcp_user_user_base }}{{ n }}.{{ openshift_cluster_ingress_domain }}/mcp"
+  loop: "{{ range(1, ocp4_workload_mcp_user_num_users | int + 1) | list }}"
   loop_control:
     loop_var: n
