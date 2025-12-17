@@ -1,4 +1,11 @@
 ---
+- name: Debug Ansible runtime version (controller)
+  ansible.builtin.debug:
+    msg:
+    - "ansible_version.full={{ ansible_version.full | default('unknown') }}"
+    - "ansible_version.string={{ ansible_version.string | default('unknown') }}"
+    - "ansible_playbook_python={{ ansible_playbook_python | default('unknown') }}"
+
 - name: Delete existing Gitea tokens
   ansible.builtin.uri:
     url: >-
