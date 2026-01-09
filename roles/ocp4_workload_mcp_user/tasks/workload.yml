@@ -87,6 +87,16 @@
               visibility:
                 state: Enabled
 
+- name: Deploy Cloud Native PostgreSQL Operator
+  when: ocp4_workload_mcp_user_cloud_native_postgresql_operator_enable | bool
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ item }}"
+  loop:
+  - cloudnativepg/namespace.yaml.j2
+  - cloudnativepg/operatorgroup.yaml.j2
+  - cloudnativepg/subscription.yaml.j2
+
 - name: Save user information
   agnosticd.core.agnosticd_user_info:
     user: "{{ ocp4_workload_mcp_user_user_base }}{{ n }}"

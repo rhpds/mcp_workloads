@@ -57,3 +57,10 @@ ocp4_workload_mcp_user_agent_model_name: "openai/llama-scout-17b"
 # Metrics access
 # -------------------------------------------------------------------
 ocp4_workload_mcp_user_metrics_enable: true
+
+# -------------------------------------------------------------------
+# Deploy Cloud Native PostgreSQL operator
+# -------------------------------------------------------------------
+ocp4_workload_mcp_user_cloud_native_postgresql_operator_enable: true
+ocp4_workload_mcp_user_cloud_native_postgresql_operator_namespace: cloudnative-pg
+ocp4_workload_mcp_user_cloud_native_postgresql_operator_channel: stable-v1
