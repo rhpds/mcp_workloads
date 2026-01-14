@@ -81,7 +81,7 @@
     msg: "{{ _validation_summary }}"
 
 - name: Save validation results to agnosticd_user_info
-  agnosticd.core.agnosticd_user_info:
+  rhpds.mcp_workloads.agnosticd_user_info:
     data:
       validation_status: "{{ _validation_status }}"
       validation_total: "{{ _validation_total }}"
