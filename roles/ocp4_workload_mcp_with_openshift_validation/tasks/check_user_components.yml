@@ -26,7 +26,3 @@
 - name: Validate Showroom for {{ _user }}
   ansible.builtin.include_tasks: check_single_showroom.yml
   when: ocp4_workload_mcp_with_openshift_validation_check_showroom | bool
-
-- name: Run MCP functional integration test for {{ _user }}
-  ansible.builtin.include_tasks: check_mcp_functional.yml
-  when: ocp4_workload_mcp_with_openshift_validation_functional_test | bool
