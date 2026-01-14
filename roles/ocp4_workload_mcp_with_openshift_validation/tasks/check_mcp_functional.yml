@@ -5,11 +5,11 @@
 
 - name: Get LibreChat credentials for {{ _user }}
   ansible.builtin.set_fact:
-    _librechat_url: "{{ lookup('agnosticd_user_data', 'librechat_url') | default('') }}"
-    _librechat_user: "{{ lookup('agnosticd_user_data', 'librechat_user_' ~ _user) | default('') }}"
-    _librechat_password: "{{ lookup('agnosticd_user_data', 'librechat_password_' ~ _user) | default('') }}"
-    _openshift_mcp_url: "{{ lookup('agnosticd_user_data', 'openshift_mcp_server_url_' ~ _user) | default('') }}"
-    _gitea_mcp_url: "{{ lookup('agnosticd_user_data', 'gitea_mcp_server_url_' ~ _user) | default('') }}"
+    _librechat_url: "{{ lookup('rhpds.mcp_workloads.agnosticd_user_data', 'librechat_url') | default('') }}"
+    _librechat_user: "{{ lookup('rhpds.mcp_workloads.agnosticd_user_data', 'librechat_user_' ~ _user) | default('') }}"
+    _librechat_password: "{{ lookup('rhpds.mcp_workloads.agnosticd_user_data', 'librechat_password_' ~ _user) | default('') }}"
+    _openshift_mcp_url: "{{ lookup('rhpds.mcp_workloads.agnosticd_user_data', 'openshift_mcp_server_url_' ~ _user) | default('') }}"
+    _gitea_mcp_url: "{{ lookup('rhpds.mcp_workloads.agnosticd_user_data', 'gitea_mcp_server_url_' ~ _user) | default('') }}"
 
 - name: Skip functional test if credentials missing
   ansible.builtin.debug:
