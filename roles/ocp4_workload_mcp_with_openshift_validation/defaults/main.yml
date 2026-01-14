@@ -25,6 +25,10 @@ ocp4_workload_mcp_with_openshift_validation_check_toolhive: true
 # GitOps Sync Checks
 ocp4_workload_mcp_with_openshift_validation_check_argocd_apps: true
 
+# Functional Integration Tests (slower, disabled by default)
+ocp4_workload_mcp_with_openshift_validation_functional_test: false
+ocp4_workload_mcp_with_openshift_validation_functional_test_timeout: 60
+
 # ==============================================================================
 # User Configuration
 # ==============================================================================
