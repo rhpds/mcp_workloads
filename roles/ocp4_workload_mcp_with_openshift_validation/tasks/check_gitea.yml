@@ -1,0 +1,93 @@
+---
+# ==============================================================================
+# Validate Shared Gitea Instance
+# ==============================================================================
+
+- name: Get all pods in Gitea namespace
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitea_namespace }}"
+  register: _gitea_pods
+  ignore_errors: true
+
+- name: Count running Gitea pods
+  ansible.builtin.set_fact:
+    _gitea_pods_running: >-
+      {{
+        _gitea_pods.resources | default([]) |
+        selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_gitea_pod_pattern) |
+        selectattr('status.phase', 'equalto', 'Running') |
+        list | length | int
+      }}
+
+- name: Check Gitea routes
+  kubernetes.core.k8s_info:
+    api_version: route.openshift.io/v1
+    kind: Route
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitea_namespace }}"
+  register: _gitea_routes
+  ignore_errors: true
+
+- name: Extract Gitea route hostname
+  ansible.builtin.set_fact:
+    _gitea_route_host: >-
+      {{
+        (_gitea_routes.resources | default([]) | first).spec.host | default('')
+        if (_gitea_routes.resources | default([]) | length > 0)
+        else ''
+      }}
+    _gitea_route_exists: "{{ _gitea_routes.resources | default([]) | length > 0 }}"
+
+- name: Check Gitea HTTP accessibility
+  ansible.builtin.uri:
+    url: "https://{{ _gitea_route_host }}"
+    method: GET
+    validate_certs: "{{ ocp4_workload_mcp_with_openshift_validation_http_validate_certs }}"
+    timeout: "{{ ocp4_workload_mcp_with_openshift_validation_http_timeout }}"
+    status_code: "{{ ocp4_workload_mcp_with_openshift_validation_http_success_codes }}"
+  register: _gitea_http_check
+  ignore_errors: true
+  when: _gitea_route_exists
+
+- name: Determine Gitea health status
+  ansible.builtin.set_fact:
+    _gitea_status: >-
+      {{
+        'failed' if (_gitea_pods_running | int == 0)
+        else 'degraded' if (
+          (_gitea_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitea_min_pods) or
+          not _gitea_route_exists or
+          (_gitea_http_check.failed | default(false))
+        )
+        else 'healthy'
+      }}
+
+- name: Add Gitea validation result
+  ansible.builtin.set_fact:
+    _validation_results: >-
+      {{
+        _validation_results + [{
+          'component': 'Shared Gitea',
+          'namespace': ocp4_workload_mcp_with_openshift_validation_gitea_namespace,
+          'status': _gitea_status,
+          'details': {
+            'pods_running': _gitea_pods_running | int,
+            'route_url': 'https://' + _gitea_route_host if _gitea_route_exists else 'N/A',
+            'http_accessible': not (_gitea_http_check.failed | default(true)) if _gitea_route_exists else false
+          }
+        }]
+      }}
+
+- name: Add Gitea issue if not healthy
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['Shared Gitea: ' + (
+          'no pods running' if (_gitea_pods_running | int == 0)
+          else 'only ' + (_gitea_pods_running | string) + ' pod(s) running' if (_gitea_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitea_min_pods)
+          else 'route not found' if not _gitea_route_exists
+          else 'HTTP not accessible'
+        )]
+      }}
+  when: _gitea_status != 'healthy'

@@ -1,0 +1,56 @@
+---
+# ==============================================================================
+# Validate OpenShift Pipelines (Tekton)
+# ==============================================================================
+
+- name: Get all pods in OpenShift Pipelines namespace
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_pipelines_namespace }}"
+  register: _pipelines_pods
+  ignore_errors: true
+
+- name: Count running Pipelines pods
+  ansible.builtin.set_fact:
+    _pipelines_pods_running: >-
+      {{
+        _pipelines_pods.resources | default([]) |
+        selectattr('status.phase', 'equalto', 'Running') |
+        list | length | int
+      }}
+
+- name: Determine Pipelines health status
+  ansible.builtin.set_fact:
+    _pipelines_status: >-
+      {{
+        'failed' if (_pipelines_pods_running | int == 0)
+        else 'degraded' if (_pipelines_pods_running | int < ocp4_workload_mcp_with_openshift_validation_pipelines_min_pods)
+        else 'healthy'
+      }}
+
+- name: Add Pipelines validation result
+  ansible.builtin.set_fact:
+    _validation_results: >-
+      {{
+        _validation_results + [{
+          'component': 'OpenShift Pipelines',
+          'namespace': ocp4_workload_mcp_with_openshift_validation_pipelines_namespace,
+          'status': _pipelines_status,
+          'details': {
+            'pods_running': _pipelines_pods_running | int,
+            'min_expected': ocp4_workload_mcp_with_openshift_validation_pipelines_min_pods
+          }
+        }]
+      }}
+
+- name: Add Pipelines issue if not healthy
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['OpenShift Pipelines: ' + (
+          'no pods running' if (_pipelines_pods_running | int == 0)
+          else 'only ' + (_pipelines_pods_running | string) + ' pod(s) running (expected ' + (ocp4_workload_mcp_with_openshift_validation_pipelines_min_pods | string) + '+)'
+        )]
+      }}
+  when: _pipelines_status != 'healthy'

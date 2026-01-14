@@ -1,0 +1,58 @@
+---
+# ==============================================================================
+# Main Validation Tasks
+# ==============================================================================
+
+- name: Initialize validation results list
+  ansible.builtin.set_fact:
+    _validation_results: []
+    _validation_issues: []
+
+- name: Display validation start message
+  ansible.builtin.debug:
+    msg: "Starting MCP with OpenShift workshop validation for {{ ocp4_workload_mcp_with_openshift_validation_num_users }} users"
+
+# ==============================================================================
+# Shared Component Validation (run first)
+# ==============================================================================
+
+- name: Validate shared Gitea instance
+  ansible.builtin.include_tasks: check_gitea.yml
+  when: ocp4_workload_mcp_with_openshift_validation_check_gitea | bool
+
+- name: Validate OpenShift GitOps
+  ansible.builtin.include_tasks: check_openshift_gitops.yml
+  when: ocp4_workload_mcp_with_openshift_validation_check_openshift_gitops | bool
+
+- name: Validate OpenShift Pipelines
+  ansible.builtin.include_tasks: check_openshift_pipelines.yml
+  when: ocp4_workload_mcp_with_openshift_validation_check_openshift_pipelines | bool
+
+- name: Validate Toolhive Operator
+  ansible.builtin.include_tasks: check_toolhive.yml
+  when: ocp4_workload_mcp_with_openshift_validation_check_toolhive | bool
+
+# ==============================================================================
+# Per-User Component Validation
+# ==============================================================================
+
+- name: Validate per-user components
+  ansible.builtin.include_tasks: check_user_components.yml
+  loop: "{{ range(1, ocp4_workload_mcp_with_openshift_validation_num_users | int + 1) | list }}"
+  loop_control:
+    loop_var: _user_number
+
+# ==============================================================================
+# GitOps Validation (run last - confirms everything synced)
+# ==============================================================================
+
+- name: Validate Argo CD Applications
+  ansible.builtin.include_tasks: check_argocd_apps.yml
+  when: ocp4_workload_mcp_with_openshift_validation_check_argocd_apps | bool
+
+# ==============================================================================
+# Generate Validation Report
+# ==============================================================================
+
+- name: Generate validation report
+  ansible.builtin.include_tasks: generate_report.yml

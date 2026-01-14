@@ -1,0 +1,139 @@
+---
+# ==============================================================================
+# Validate Argo CD Applications (GitOps Sync Status)
+# ==============================================================================
+
+- name: Get all Argo CD Applications
+  kubernetes.core.k8s_info:
+    api_version: argoproj.io/v1alpha1
+    kind: Application
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitops_namespace }}"
+  register: _argocd_apps
+  ignore_errors: true
+
+- name: Count total Argo CD applications
+  ansible.builtin.set_fact:
+    _argocd_total_apps: "{{ _argocd_apps.resources | default([]) | length | int }}"
+
+- name: Count expected Argo CD applications
+  ansible.builtin.set_fact:
+    _argocd_expected_apps: "{{ (ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user) | int }}"
+
+- name: Count synced and healthy applications
+  ansible.builtin.set_fact:
+    _argocd_synced_apps: >-
+      {{
+        _argocd_apps.resources | default([]) |
+        selectattr('status.sync.status', 'defined') |
+        selectattr('status.sync.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status) |
+        list | length | int
+      }}
+    _argocd_healthy_apps: >-
+      {{
+        _argocd_apps.resources | default([]) |
+        selectattr('status.health.status', 'defined') |
+        selectattr('status.health.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status) |
+        list | length | int
+      }}
+    _argocd_synced_and_healthy: >-
+      {{
+        _argocd_apps.resources | default([]) |
+        selectattr('status.sync.status', 'defined') |
+        selectattr('status.sync.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status) |
+        selectattr('status.health.status', 'defined') |
+        selectattr('status.health.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status) |
+        list | length | int
+      }}
+
+- name: Get list of non-synced applications
+  ansible.builtin.set_fact:
+    _argocd_not_synced: >-
+      {{
+        _argocd_apps.resources | default([]) |
+        rejectattr('status.sync.status', 'defined') |
+        map(attribute='metadata.name') |
+        list +
+        _argocd_apps.resources | default([]) |
+        selectattr('status.sync.status', 'defined') |
+        rejectattr('status.sync.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status) |
+        map(attribute='metadata.name') |
+        list
+      }}
+
+- name: Get list of non-healthy applications
+  ansible.builtin.set_fact:
+    _argocd_not_healthy: >-
+      {{
+        _argocd_apps.resources | default([]) |
+        rejectattr('status.health.status', 'defined') |
+        map(attribute='metadata.name') |
+        list +
+        _argocd_apps.resources | default([]) |
+        selectattr('status.health.status', 'defined') |
+        rejectattr('status.health.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status) |
+        map(attribute='metadata.name') |
+        list
+      }}
+
+- name: Determine GitOps sync health status
+  ansible.builtin.set_fact:
+    _argocd_status: >-
+      {{
+        'failed' if (
+          (_argocd_total_apps | int < _argocd_expected_apps | int) or
+          (_argocd_synced_and_healthy | int == 0)
+        )
+        else 'degraded' if (_argocd_synced_and_healthy | int < _argocd_expected_apps | int)
+        else 'healthy'
+      }}
+
+- name: Add GitOps validation result
+  ansible.builtin.set_fact:
+    _validation_results: >-
+      {{
+        _validation_results + [{
+          'component': 'GitOps Sync Status',
+          'namespace': ocp4_workload_mcp_with_openshift_validation_gitops_namespace,
+          'status': _argocd_status,
+          'details': {
+            'total_apps': _argocd_total_apps | int,
+            'expected_apps': _argocd_expected_apps | int,
+            'synced_apps': _argocd_synced_apps | int,
+            'healthy_apps': _argocd_healthy_apps | int,
+            'synced_and_healthy': _argocd_synced_and_healthy | int,
+            'not_synced': _argocd_not_synced | join(', ') if (_argocd_not_synced | length > 0) else 'None',
+            'not_healthy': _argocd_not_healthy | join(', ') if (_argocd_not_healthy | length > 0) else 'None'
+          }
+        }]
+      }}
+
+- name: Add GitOps issue if not healthy
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['GitOps Sync: ' + (
+          'only ' + (_argocd_total_apps | string) + '/' + (_argocd_expected_apps | string) + ' apps found' if (_argocd_total_apps | int < _argocd_expected_apps | int)
+          else (_argocd_synced_and_healthy | string) + '/' + (_argocd_expected_apps | string) + ' apps synced and healthy'
+        )]
+      }}
+  when: _argocd_status != 'healthy'
+
+- name: Add details about non-synced apps
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['GitOps not synced: ' + (_argocd_not_synced | join(', '))]
+      }}
+  when:
+    - _argocd_status != 'healthy'
+    - _argocd_not_synced | length > 0
+
+- name: Add details about non-healthy apps
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['GitOps not healthy: ' + (_argocd_not_healthy | join(', '))]
+      }}
+  when:
+    - _argocd_status != 'healthy'
+    - _argocd_not_healthy | length > 0
