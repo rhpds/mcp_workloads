@@ -106,11 +106,11 @@
           'namespace': 'functional-test',
           'status': _mcp_functional_status,
           'details': {
-            'auth_successful': _auth_response is succeeded if _auth_response is defined else false,
-            'openshift_mcp_working': _openshift_mcp_working | default(false),
-            'gitea_mcp_working': _gitea_mcp_working | default(false),
-            'openshift_mcp_url': _openshift_mcp_url if _openshift_mcp_url != '' else 'N/A',
-            'gitea_mcp_url': _gitea_mcp_url if _gitea_mcp_url != '' else 'N/A'
+            'auth_successful': ((_auth_response is succeeded) if (_auth_response is defined) else false),
+            'openshift_mcp_working': (_openshift_mcp_working | default(false)),
+            'gitea_mcp_working': (_gitea_mcp_working | default(false)),
+            'openshift_mcp_url': ((_openshift_mcp_url if _openshift_mcp_url != '' else 'N/A')),
+            'gitea_mcp_url': ((_gitea_mcp_url if _gitea_mcp_url != '' else 'N/A'))
           }
         }]
       }}
