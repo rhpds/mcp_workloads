@@ -90,6 +90,8 @@ ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status: "Heal
 ocp4_workload_mcp_with_openshift_validation_http_validate_certs: false
 ocp4_workload_mcp_with_openshift_validation_http_timeout: 10
 ocp4_workload_mcp_with_openshift_validation_http_success_codes: [200, 301, 302]
+# API-only components (Agent, MCP servers) accept 404 at root path
+ocp4_workload_mcp_with_openshift_validation_http_api_success_codes: [200, 301, 302, 404]
 
 # ==============================================================================
 # Validation Thresholds
