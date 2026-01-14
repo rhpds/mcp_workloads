@@ -3,6 +3,14 @@
 # Main Validation Tasks
 # ==============================================================================
 
+- name: Check if validation is enabled
+  ansible.builtin.debug:
+    msg: "Validation is {{ 'enabled' if (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool) else 'disabled' }} - {{ 'proceeding' if (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool) else 'skipping' }}"
+
+- name: End play if validation is disabled
+  ansible.builtin.meta: end_play
+  when: not (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool)
+
 - name: Initialize validation results list
   ansible.builtin.set_fact:
     _validation_results: []
