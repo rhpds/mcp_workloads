@@ -3,12 +3,17 @@
 # Validate Argo CD Applications (GitOps Sync Status)
 # ==============================================================================
 
-- name: Get all Argo CD Applications
+- name: Wait for Argo CD Applications to sync and become healthy
   kubernetes.core.k8s_info:
     api_version: argoproj.io/v1alpha1
     kind: Application
     namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitops_namespace }}"
   register: _argocd_apps
+  until:
+    - _argocd_apps.resources | default([]) | length >= (ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user)
+    - (_argocd_apps.resources | default([]) | selectattr('status.sync.status', 'defined') | selectattr('status.sync.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status) | selectattr('status.health.status', 'defined') | selectattr('status.health.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status) | list | length) >= (ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user)
+  retries: "{{ ocp4_workload_mcp_with_openshift_validation_argocd_wait_retries }}"
+  delay: "{{ ocp4_workload_mcp_with_openshift_validation_argocd_wait_delay }}"
   ignore_errors: true
 
 - name: Count total Argo CD applications

@@ -83,6 +83,9 @@ ocp4_workload_mcp_with_openshift_validation_toolhive_min_pods: 1
 ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user: 5
 ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status: "Synced"
 ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status: "Healthy"
+# Wait for GitOps to sync (can take 5-10 minutes)
+ocp4_workload_mcp_with_openshift_validation_argocd_wait_retries: 60
+ocp4_workload_mcp_with_openshift_validation_argocd_wait_delay: 10
 
 # ==============================================================================
 # HTTP Check Configuration

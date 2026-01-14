@@ -80,6 +80,15 @@
   ansible.builtin.debug:
     msg: "{{ _validation_summary }}"
 
+- name: Format validation issues as AsciiDoc list
+  ansible.builtin.set_fact:
+    _validation_issues_formatted: >-
+      {{
+        _validation_issues | map('regex_replace', '^(.*)$', '* \1') | join('\n')
+        if _validation_issues | length > 0
+        else 'None'
+      }}
+
 - name: Save validation results to agnosticd_user_info
   rhpds.mcp_workloads.agnosticd_user_info:
     data:
@@ -88,7 +97,7 @@
       validation_healthy: "{{ _validation_healthy }}"
       validation_degraded: "{{ _validation_degraded }}"
       validation_failed: "{{ _validation_failed }}"
-      validation_issues: "{{ _validation_issues | join(', ') if _validation_issues | length > 0 else 'None' }}"
+      validation_issues: "{{ _validation_issues_formatted }}"
       validation_summary: "{{ _validation_summary }}"
 
 - name: Validation complete message
