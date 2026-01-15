@@ -1,0 +1,115 @@
+---
+# ==============================================================================
+# Validate MCP OpenShift Server for Single User
+# ==============================================================================
+
+- name: Discover MCP OpenShift namespace for {{ _user }}
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+  register: _all_namespaces
+  ignore_errors: true
+
+- name: Find MCP OpenShift namespace matching user pattern
+  ansible.builtin.set_fact:
+    _namespace: >-
+      {{
+        _all_namespaces.resources | default([]) |
+        map(attribute='metadata.name') |
+        select('match', '^' + ocp4_workload_mcp_with_openshift_validation_mcp_openshift_namespace_pattern + _user + '$') |
+        list | first | default('')
+      }}
+
+- name: Get all pods in {{ _namespace }}
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ _namespace }}"
+  register: _pods
+  ignore_errors: true
+  when: _namespace != ''
+
+- name: Count MCP OpenShift pods by name pattern
+  ansible.builtin.set_fact:
+    _pods_running: >-
+      {{
+        _pods.resources | default([]) |
+        selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_mcp_openshift_pod_pattern) |
+        selectattr('status.phase', 'equalto', 'Running') |
+        list | length | int
+        if (_namespace != '' and _pods is defined and not _pods.skipped | default(false))
+        else 0
+      }}
+
+- name: Check routes in {{ _namespace }}
+  kubernetes.core.k8s_info:
+    api_version: route.openshift.io/v1
+    kind: Route
+    namespace: "{{ _namespace }}"
+  register: _routes
+  ignore_errors: true
+  when: _namespace != ''
+
+- name: Extract MCP OpenShift route hostname
+  ansible.builtin.set_fact:
+    _route_host: >-
+      {{
+        (_routes.resources | default([]) | first).spec.host | default('')
+        if (_routes.resources | default([]) | length > 0)
+        else ''
+      }}
+    _route_exists: "{{ _namespace != '' and _routes is defined and not _routes.skipped | default(false) and (_routes.resources | default([]) | length > 0) }}"
+
+- name: Check MCP OpenShift HTTP accessibility
+  ansible.builtin.uri:
+    url: "https://{{ _route_host }}"
+    method: GET
+    validate_certs: "{{ ocp4_workload_mcp_with_openshift_validation_http_validate_certs }}"
+    timeout: "{{ ocp4_workload_mcp_with_openshift_validation_http_timeout }}"
+    status_code: "{{ ocp4_workload_mcp_with_openshift_validation_http_api_success_codes }}"
+  register: _http_check
+  ignore_errors: true
+  when: _route_exists
+
+- name: Determine MCP OpenShift health status for {{ _user }}
+  ansible.builtin.set_fact:
+    _status: >-
+      {{
+        'failed' if (_namespace == '' or _pods_running | int == 0)
+        else 'degraded' if (
+          (_pods_running | int < ocp4_workload_mcp_with_openshift_validation_mcp_openshift_min_pods) or
+          not _route_exists or
+          (_http_check.failed | default(false))
+        )
+        else 'healthy'
+      }}
+
+- name: Add MCP OpenShift validation result for {{ _user }}
+  ansible.builtin.set_fact:
+    _validation_results: >-
+      {{
+        _validation_results + [{
+          'component': _user + ' MCP OpenShift',
+          'namespace': _namespace if _namespace != '' else 'N/A',
+          'status': _status,
+          'details': {
+            'pods_running': _pods_running | int,
+            'route_url': 'https://' + _route_host if _route_exists else 'N/A',
+            'http_accessible': not (_http_check.failed | default(true)) if _route_exists else false
+          }
+        }]
+      }}
+
+- name: Add MCP OpenShift issue for {{ _user }} if not healthy
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + [_user + ' MCP OpenShift: ' + (
+          'namespace not found (expected pattern: ' + ocp4_workload_mcp_with_openshift_validation_mcp_openshift_namespace_pattern + _user + ')' if _namespace == ''
+          else 'no pods running' if (_pods_running | int == 0)
+          else 'only ' + (_pods_running | string) + ' pod(s) running' if (_pods_running | int < ocp4_workload_mcp_with_openshift_validation_mcp_openshift_min_pods)
+          else 'route not found' if not _route_exists
+          else 'HTTP not accessible'
+        )]
+      }}
+  when: _status != 'healthy'

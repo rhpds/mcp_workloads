@@ -1,0 +1,17 @@
+---
+# ==============================================================================
+# Test Playbook: MCP with OpenShift Workshop Validation
+# ==============================================================================
+
+- name: Validate MCP with OpenShift Workshop
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Run MCP with OpenShift validation role
+      ansible.builtin.include_role:
+        name: rhpds.mcp_workloads.ocp4_workload_mcp_with_openshift_validation
+      vars:
+        # Override number of users if needed
+        ocp4_workload_mcp_with_openshift_validation_num_users: 3

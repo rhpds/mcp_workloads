@@ -1,0 +1,95 @@
+---
+# ==============================================================================
+# Validate OpenShift GitOps (Argo CD)
+# ==============================================================================
+
+- name: Get all pods in OpenShift GitOps namespace
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitops_namespace }}"
+  register: _gitops_pods
+  ignore_errors: true
+
+- name: Count running GitOps pods
+  ansible.builtin.set_fact:
+    _gitops_pods_running: >-
+      {{
+        _gitops_pods.resources | default([]) |
+        selectattr('status.phase', 'equalto', 'Running') |
+        list | length | int
+      }}
+
+- name: Check GitOps routes
+  kubernetes.core.k8s_info:
+    api_version: route.openshift.io/v1
+    kind: Route
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitops_namespace }}"
+  register: _gitops_routes
+  ignore_errors: true
+
+- name: Extract Argo CD server route
+  ansible.builtin.set_fact:
+    _gitops_route_host: >-
+      {{
+        (_gitops_routes.resources | default([]) |
+        selectattr('metadata.name', 'search', 'openshift-gitops-server') |
+        list | first).spec.host | default('')
+        if (_gitops_routes.resources | default([]) | selectattr('metadata.name', 'search', 'openshift-gitops-server') | list | length > 0)
+        else ''
+      }}
+    _gitops_route_exists: "{{ _gitops_routes.resources | default([]) | selectattr('metadata.name', 'search', 'openshift-gitops-server') | list | length > 0 }}"
+
+- name: Check Argo CD HTTP accessibility
+  ansible.builtin.uri:
+    url: "https://{{ _gitops_route_host }}"
+    method: GET
+    validate_certs: "{{ ocp4_workload_mcp_with_openshift_validation_http_validate_certs }}"
+    timeout: "{{ ocp4_workload_mcp_with_openshift_validation_http_timeout }}"
+    status_code: "{{ ocp4_workload_mcp_with_openshift_validation_http_success_codes }}"
+  register: _gitops_http_check
+  ignore_errors: true
+  when: _gitops_route_exists
+
+- name: Determine GitOps health status
+  ansible.builtin.set_fact:
+    _gitops_status: >-
+      {{
+        'failed' if (_gitops_pods_running | int == 0)
+        else 'degraded' if (
+          (_gitops_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitops_min_pods) or
+          not _gitops_route_exists or
+          (_gitops_http_check.failed | default(false))
+        )
+        else 'healthy'
+      }}
+
+- name: Add GitOps validation result
+  ansible.builtin.set_fact:
+    _validation_results: >-
+      {{
+        _validation_results + [{
+          'component': 'OpenShift GitOps',
+          'namespace': ocp4_workload_mcp_with_openshift_validation_gitops_namespace,
+          'status': _gitops_status,
+          'details': {
+            'pods_running': _gitops_pods_running | int,
+            'min_expected': ocp4_workload_mcp_with_openshift_validation_gitops_min_pods,
+            'route_url': 'https://' + _gitops_route_host if _gitops_route_exists else 'N/A',
+            'http_accessible': not (_gitops_http_check.failed | default(true)) if _gitops_route_exists else false
+          }
+        }]
+      }}
+
+- name: Add GitOps issue if not healthy
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['OpenShift GitOps: ' + (
+          'no pods running' if (_gitops_pods_running | int == 0)
+          else 'only ' + (_gitops_pods_running | string) + ' pod(s) running (expected ' + (ocp4_workload_mcp_with_openshift_validation_gitops_min_pods | string) + '+)' if (_gitops_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitops_min_pods)
+          else 'route not found' if not _gitops_route_exists
+          else 'HTTP not accessible'
+        )]
+      }}
+  when: _gitops_status != 'healthy'

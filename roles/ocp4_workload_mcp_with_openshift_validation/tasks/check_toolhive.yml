@@ -1,0 +1,57 @@
+---
+# ==============================================================================
+# Validate Toolhive Operator
+# ==============================================================================
+
+- name: Get all pods in Toolhive namespace
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ ocp4_workload_mcp_with_openshift_validation_toolhive_namespace }}"
+  register: _toolhive_pods
+  ignore_errors: true
+
+- name: Count running Toolhive operator pods
+  ansible.builtin.set_fact:
+    _toolhive_pods_running: >-
+      {{
+        _toolhive_pods.resources | default([]) |
+        selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_toolhive_pod_pattern) |
+        selectattr('status.phase', 'equalto', 'Running') |
+        list | length | int
+      }}
+
+- name: Determine Toolhive health status
+  ansible.builtin.set_fact:
+    _toolhive_status: >-
+      {{
+        'failed' if (_toolhive_pods_running | int == 0)
+        else 'degraded' if (_toolhive_pods_running | int < ocp4_workload_mcp_with_openshift_validation_toolhive_min_pods)
+        else 'healthy'
+      }}
+
+- name: Add Toolhive validation result
+  ansible.builtin.set_fact:
+    _validation_results: >-
+      {{
+        _validation_results + [{
+          'component': 'Toolhive Operator',
+          'namespace': ocp4_workload_mcp_with_openshift_validation_toolhive_namespace,
+          'status': _toolhive_status,
+          'details': {
+            'pods_running': _toolhive_pods_running | int,
+            'min_expected': ocp4_workload_mcp_with_openshift_validation_toolhive_min_pods
+          }
+        }]
+      }}
+
+- name: Add Toolhive issue if not healthy
+  ansible.builtin.set_fact:
+    _validation_issues: >-
+      {{
+        _validation_issues + ['Toolhive Operator: ' + (
+          'no pods running' if (_toolhive_pods_running | int == 0)
+          else 'only ' + (_toolhive_pods_running | string) + ' pod(s) running'
+        )]
+      }}
+  when: _toolhive_status != 'healthy'

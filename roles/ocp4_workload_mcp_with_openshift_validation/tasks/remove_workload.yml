@@ -1,0 +1,4 @@
+---
+- name: Validation workload removal
+  ansible.builtin.debug:
+    msg: "Validation workload does not require removal - it only checks deployed resources."
