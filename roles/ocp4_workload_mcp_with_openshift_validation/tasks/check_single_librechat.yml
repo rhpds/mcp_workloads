@@ -41,23 +41,22 @@
         else 0
       }}
 
-- name: Count LibreChat ready pods by name pattern
+- name: Initialize ready pod count
   ansible.builtin.set_fact:
-    _pods_ready: >-
-      {{
-        _pods.resources | default([]) |
-        selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_librechat_pod_pattern) |
-        selectattr('status.phase', 'equalto', 'Running') |
-        selectattr('status.conditions', 'defined') |
-        map(attribute='status.conditions') |
-        map('selectattr', 'type', 'equalto', 'Ready') |
-        map('selectattr', 'status', 'equalto', 'True') |
-        map('list') |
-        select('length') |
-        list | length | int
-        if (_namespace != '' and _pods is defined and not _pods.skipped | default(false))
-        else 0
-      }}
+    _pods_ready: 0
+
+- name: Count ready pods for LibreChat
+  ansible.builtin.set_fact:
+    _pods_ready: "{{ _pods_ready | int + 1 }}"
+  loop: "{{ _pods.resources | default([]) | selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_librechat_pod_pattern) | selectattr('status.phase', 'equalto', 'Running') | list }}"
+  when:
+    - _namespace != ''
+    - _pods is defined
+    - not _pods.skipped | default(false)
+    - item.status.conditions is defined
+    - item.status.conditions | selectattr('type', 'equalto', 'Ready') | selectattr('status', 'equalto', 'True') | list | length > 0
+  loop_control:
+    label: "{{ item.metadata.name }}"
 
 - name: Check routes in {{ _namespace }}
   kubernetes.core.k8s_info:
