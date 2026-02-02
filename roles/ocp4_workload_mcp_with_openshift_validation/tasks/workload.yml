@@ -16,9 +16,34 @@
     _validation_results: []
     _validation_issues: []
 
-- name: Display validation start message
+- name: Display validation plan
   ansible.builtin.debug:
-    msg: "Starting MCP with OpenShift workshop validation for {{ ocp4_workload_mcp_with_openshift_validation_num_users }} users"
+    msg: |
+      ================================================
+      MCP with OpenShift Workshop Validation Plan
+      ================================================
+
+      Users to validate: {{ ocp4_workload_mcp_with_openshift_validation_num_users }}
+      User prefix: {{ ocp4_workload_mcp_with_openshift_validation_user_prefix }}
+
+      Shared Components:
+      - Gitea: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_gitea | bool else 'disabled' }}
+      - OpenShift GitOps: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_openshift_gitops | bool else 'disabled' }}
+      - OpenShift Pipelines: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_openshift_pipelines | bool else 'disabled' }}
+      - Toolhive: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_toolhive | bool else 'disabled' }}
+
+      Per-User Components:
+      - LibreChat: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_librechat | bool else 'disabled' }}
+      - MCP OpenShift Server: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_mcp_openshift | bool else 'disabled' }}
+      - MCP Gitea Server: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_mcp_gitea | bool else 'disabled' }}
+      - Agent: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_agent | bool else 'disabled' }}
+      - Showroom: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_showroom | bool else 'disabled' }}
+
+      GitOps Validation:
+      - ArgoCD Apps: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_argocd_apps | bool else 'disabled' }}
+      - Expected apps: {{ ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user }}
+
+      ================================================
 
 # ==============================================================================
 # Shared Component Validation (run first)
@@ -41,7 +66,21 @@
   when: ocp4_workload_mcp_with_openshift_validation_check_toolhive | bool
 
 # ==============================================================================
-# Per-User Component Validation
+# GitOps Validation (run BEFORE per-user checks - wait for deployments)
+# ==============================================================================
+
+- name: Wait for Argo CD Applications to sync
+  ansible.builtin.include_tasks: check_argocd_apps.yml
+  when: ocp4_workload_mcp_with_openshift_validation_check_argocd_apps | bool
+
+- name: Wait for pods to start after GitOps sync
+  ansible.builtin.pause:
+    seconds: 30
+    prompt: "Waiting 30 seconds for pods to start after GitOps sync completes..."
+  when: ocp4_workload_mcp_with_openshift_validation_check_argocd_apps | bool
+
+# ==============================================================================
+# Per-User Component Validation (run AFTER GitOps sync)
 # ==============================================================================
 
 - name: Validate per-user components
@@ -49,14 +88,6 @@
   loop: "{{ range(1, ocp4_workload_mcp_with_openshift_validation_num_users | int + 1) | list }}"
   loop_control:
     loop_var: _user_number
-
-# ==============================================================================
-# GitOps Validation (run last - confirms everything synced)
-# ==============================================================================
-
-- name: Validate Argo CD Applications
-  ansible.builtin.include_tasks: check_argocd_apps.yml
-  when: ocp4_workload_mcp_with_openshift_validation_check_argocd_apps | bool
 
 # ==============================================================================
 # Generate Validation Report

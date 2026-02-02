@@ -29,13 +29,31 @@
   ignore_errors: true
   when: _namespace != ''
 
-- name: Count LibreChat pods by name pattern
+- name: Count LibreChat running pods by name pattern
   ansible.builtin.set_fact:
     _pods_running: >-
       {{
         _pods.resources | default([]) |
         selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_librechat_pod_pattern) |
         selectattr('status.phase', 'equalto', 'Running') |
+        list | length | int
+        if (_namespace != '' and _pods is defined and not _pods.skipped | default(false))
+        else 0
+      }}
+
+- name: Count LibreChat ready pods by name pattern
+  ansible.builtin.set_fact:
+    _pods_ready: >-
+      {{
+        _pods.resources | default([]) |
+        selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_librechat_pod_pattern) |
+        selectattr('status.phase', 'equalto', 'Running') |
+        selectattr('status.conditions', 'defined') |
+        map(attribute='status.conditions') |
+        map('selectattr', 'type', 'equalto', 'Ready') |
+        map('selectattr', 'status', 'equalto', 'True') |
+        map('list') |
+        select('length') |
         list | length | int
         if (_namespace != '' and _pods is defined and not _pods.skipped | default(false))
         else 0
@@ -60,7 +78,7 @@
       }}
     _route_exists: "{{ _namespace != '' and _routes is defined and not _routes.skipped | default(false) and (_routes.resources | default([]) | length > 0) }}"
 
-- name: Check LibreChat HTTP accessibility
+- name: Check LibreChat HTTP accessibility (with retries)
   ansible.builtin.uri:
     url: "https://{{ _route_host }}"
     method: GET
@@ -68,6 +86,9 @@
     timeout: "{{ ocp4_workload_mcp_with_openshift_validation_http_timeout }}"
     status_code: "{{ ocp4_workload_mcp_with_openshift_validation_http_success_codes }}"
   register: _http_check
+  until: _http_check is succeeded
+  retries: 6
+  delay: 10
   ignore_errors: true
   when: _route_exists
 
@@ -75,9 +96,9 @@
   ansible.builtin.set_fact:
     _status: >-
       {{
-        'failed' if (_namespace == '' or _pods_running | int == 0)
+        'failed' if (_namespace == '' or _pods_ready | int == 0)
         else 'degraded' if (
-          (_pods_running | int < ocp4_workload_mcp_with_openshift_validation_librechat_min_pods) or
+          (_pods_ready | int < ocp4_workload_mcp_with_openshift_validation_librechat_min_pods) or
           not _route_exists or
           (_http_check.failed | default(false))
         )
@@ -94,7 +115,9 @@
           'status': _status,
           'details': {
             'pods_running': _pods_running | int,
+            'pods_ready': _pods_ready | int,
             'route_url': 'https://' + _route_host if _route_exists else 'N/A',
+            'http_status': _http_check.status | default('N/A') if _route_exists else 'N/A',
             'http_accessible': not (_http_check.failed | default(true)) if _route_exists else false
           }
         }]
@@ -106,10 +129,10 @@
       {{
         _validation_issues + [_user + ' LibreChat: ' + (
           'namespace not found (expected pattern: ' + ocp4_workload_mcp_with_openshift_validation_librechat_namespace_pattern + _user + ')' if _namespace == ''
-          else 'no pods running' if (_pods_running | int == 0)
-          else 'only ' + (_pods_running | string) + ' pod(s) running' if (_pods_running | int < ocp4_workload_mcp_with_openshift_validation_librechat_min_pods)
+          else 'no pods ready (running: ' + (_pods_running | string) + ', ready: 0)' if (_pods_ready | int == 0)
+          else 'only ' + (_pods_ready | string) + '/' + (_pods_running | string) + ' pod(s) ready' if (_pods_ready | int < ocp4_workload_mcp_with_openshift_validation_librechat_min_pods)
           else 'route not found' if not _route_exists
-          else 'HTTP not accessible'
+          else 'HTTP not accessible (status: ' + (_http_check.status | default('connection failed') | string) + ')'
         )]
       }}
   when: _status != 'healthy'
