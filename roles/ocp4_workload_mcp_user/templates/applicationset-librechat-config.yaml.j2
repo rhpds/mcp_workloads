@@ -25,7 +25,7 @@ spec:
         name: ""
         namespace: "{{ ocp4_workload_mcp_user_librechat_namespace_base }}-{% raw %}{{ user }}{% endraw %}"
         server: https://kubernetes.default.svc
-      project: "{{ocp4_workload_mcp_user_app_project_prefix}}-{% raw %}{{ user }}{% endraw %}"
+      project: "{{ocp4_workload_mcp_user_app_project_prefix}}{% raw %}{{ user }}{% endraw %}"
       syncPolicy:
         syncOptions:
         - CreateNamespace=true
