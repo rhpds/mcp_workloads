@@ -4,6 +4,9 @@
 # ------------------------------------------------
 ocp4_workload_mcp_user_num_users: 2
 ocp4_workload_mcp_user_user_base: user
+# Which AppProjects to assign the ApplicationSets to
+# Per user ApplicationSets need to be enabled in the openshift-workload-openshift-gitops workload
+ocp4_workload_mcp_user_app_project_prefix: "appproject-"
 
 # LiteMaaS credentials - set from secrets/vaults
 ocp4_workload_mcp_user_litemaas_keys: []
