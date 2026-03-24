@@ -85,7 +85,8 @@
       {{
         _validation_issues + ['Shared Gitea: ' + (
           'no pods running' if (_gitea_pods_running | int == 0)
-          else 'only ' + (_gitea_pods_running | string) + ' pod(s) running' if (_gitea_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitea_min_pods)
+          else 'only ' + (_gitea_pods_running | string) + ' pod(s) running'
+          if (_gitea_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitea_min_pods)
           else 'route not found' if not _gitea_route_exists
           else 'HTTP not accessible'
         )]

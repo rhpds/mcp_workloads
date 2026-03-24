@@ -38,7 +38,10 @@
         if (_gitops_routes.resources | default([]) | selectattr('metadata.name', 'search', 'openshift-gitops-server') | list | length > 0)
         else ''
       }}
-    _gitops_route_exists: "{{ _gitops_routes.resources | default([]) | selectattr('metadata.name', 'search', 'openshift-gitops-server') | list | length > 0 }}"
+    _gitops_route_exists: >-
+      {{ _gitops_routes.resources | default([])
+      | selectattr('metadata.name', 'search', 'openshift-gitops-server')
+      | list | length > 0 }}
 
 - name: Check Argo CD HTTP accessibility
   ansible.builtin.uri:
@@ -87,7 +90,10 @@
       {{
         _validation_issues + ['OpenShift GitOps: ' + (
           'no pods running' if (_gitops_pods_running | int == 0)
-          else 'only ' + (_gitops_pods_running | string) + ' pod(s) running (expected ' + (ocp4_workload_mcp_with_openshift_validation_gitops_min_pods | string) + '+)' if (_gitops_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitops_min_pods)
+          else 'only ' + (_gitops_pods_running | string)
+          + ' pod(s) running (expected '
+          + (ocp4_workload_mcp_with_openshift_validation_gitops_min_pods | string) + '+)'
+          if (_gitops_pods_running | int < ocp4_workload_mcp_with_openshift_validation_gitops_min_pods)
           else 'route not found' if not _gitops_route_exists
           else 'HTTP not accessible'
         )]

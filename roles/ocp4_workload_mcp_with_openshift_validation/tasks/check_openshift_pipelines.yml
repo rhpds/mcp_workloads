@@ -50,7 +50,9 @@
       {{
         _validation_issues + ['OpenShift Pipelines: ' + (
           'no pods running' if (_pipelines_pods_running | int == 0)
-          else 'only ' + (_pipelines_pods_running | string) + ' pod(s) running (expected ' + (ocp4_workload_mcp_with_openshift_validation_pipelines_min_pods | string) + '+)'
+          else 'only ' + (_pipelines_pods_running | string)
+          + ' pod(s) running (expected '
+          + (ocp4_workload_mcp_with_openshift_validation_pipelines_min_pods | string) + '+)'
         )]
       }}
   when: _pipelines_status != 'healthy'

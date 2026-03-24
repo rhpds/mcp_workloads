@@ -48,7 +48,10 @@
 - name: Count ready pods for MCP OpenShift
   ansible.builtin.set_fact:
     _pods_ready: "{{ _pods_ready | int + 1 }}"
-  loop: "{{ _pods.resources | default([]) | selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_mcp_openshift_pod_pattern) | selectattr('status.phase', 'equalto', 'Running') | list }}"
+  loop: >-
+    {{ _pods.resources | default([])
+    | selectattr('metadata.name', 'search', ocp4_workload_mcp_with_openshift_validation_mcp_openshift_pod_pattern)
+    | selectattr('status.phase', 'equalto', 'Running') | list }}
   when:
     - _namespace != ''
     - _pods is defined
@@ -75,7 +78,10 @@
         if (_routes.resources | default([]) | length > 0)
         else ''
       }}
-    _route_exists: "{{ _namespace != '' and _routes is defined and not _routes.skipped | default(false) and (_routes.resources | default([]) | length > 0) }}"
+    _route_exists: >-
+      {{ _namespace != '' and _routes is defined
+      and not _routes.skipped | default(false)
+      and (_routes.resources | default([]) | length > 0) }}
 
 - name: Check MCP OpenShift HTTP accessibility (with retries)
   ansible.builtin.uri:
@@ -122,14 +128,16 @@
         }]
       }}
 
-- name: Add MCP OpenShift issue for {{ _user }} if not healthy
+- name: Add MCP OpenShift issue if not healthy for {{ _user }}
   ansible.builtin.set_fact:
     _validation_issues: >-
       {{
         _validation_issues + [_user + ' MCP OpenShift: ' + (
-          'namespace not found (expected pattern: ' + ocp4_workload_mcp_with_openshift_validation_mcp_openshift_namespace_pattern + _user + ')' if _namespace == ''
+          'namespace not found (expected pattern: '
+            + ocp4_workload_mcp_with_openshift_validation_mcp_openshift_namespace_pattern + _user + ')' if _namespace == ''
           else 'no pods ready (running: ' + (_pods_running | string) + ', ready: 0)' if (_pods_ready | int == 0)
-          else 'only ' + (_pods_ready | string) + '/' + (_pods_running | string) + ' pod(s) ready' if (_pods_ready | int < ocp4_workload_mcp_with_openshift_validation_mcp_openshift_min_pods)
+          else 'only ' + (_pods_ready | string) + '/' + (_pods_running | string)
+            + ' pod(s) ready' if (_pods_ready | int < ocp4_workload_mcp_with_openshift_validation_mcp_openshift_min_pods)
           else 'route not found' if not _route_exists
           else 'HTTP not accessible (status: ' + (_http_check.status | default('connection failed') | string) + ')'
         )]
