@@ -10,8 +10,21 @@
     namespace: "{{ ocp4_workload_mcp_with_openshift_validation_gitops_namespace }}"
   register: _argocd_apps
   until:
-    - _argocd_apps.resources | default([]) | length >= (ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user)
-    - (_argocd_apps.resources | default([]) | selectattr('status.sync.status', 'defined') | selectattr('status.sync.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status) | selectattr('status.health.status', 'defined') | selectattr('status.health.status', 'equalto', ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status) | list | length) >= (ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user)
+    - >-
+      _argocd_apps.resources | default([]) | length >=
+      (ocp4_workload_mcp_with_openshift_validation_num_users | int
+      * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user)
+    - >-
+      (_argocd_apps.resources | default([])
+      | selectattr('status.sync.status', 'defined')
+      | selectattr('status.sync.status', 'equalto',
+        ocp4_workload_mcp_with_openshift_validation_argocd_required_sync_status)
+      | selectattr('status.health.status', 'defined')
+      | selectattr('status.health.status', 'equalto',
+        ocp4_workload_mcp_with_openshift_validation_argocd_required_health_status)
+      | list | length) >=
+      (ocp4_workload_mcp_with_openshift_validation_num_users | int
+      * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user)
   retries: "{{ ocp4_workload_mcp_with_openshift_validation_argocd_wait_retries }}"
   delay: "{{ ocp4_workload_mcp_with_openshift_validation_argocd_wait_delay }}"
   ignore_errors: true
@@ -22,7 +35,9 @@
 
 - name: Count expected Argo CD applications
   ansible.builtin.set_fact:
-    _argocd_expected_apps: "{{ (ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user) | int }}"
+    _argocd_expected_apps: >-
+      {{ (ocp4_workload_mcp_with_openshift_validation_num_users | int
+      * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user) | int }}
 
 - name: Count synced and healthy applications
   ansible.builtin.set_fact:
@@ -117,8 +132,11 @@
     _validation_issues: >-
       {{
         _validation_issues + ['GitOps Sync: ' + (
-          'only ' + (_argocd_total_apps | string) + '/' + (_argocd_expected_apps | string) + ' apps found' if (_argocd_total_apps | int < _argocd_expected_apps | int)
-          else (_argocd_synced_and_healthy | string) + '/' + (_argocd_expected_apps | string) + ' apps synced and healthy'
+          'only ' + (_argocd_total_apps | string) + '/'
+          + (_argocd_expected_apps | string) + ' apps found'
+          if (_argocd_total_apps | int < _argocd_expected_apps | int)
+          else (_argocd_synced_and_healthy | string) + '/'
+          + (_argocd_expected_apps | string) + ' apps synced and healthy'
         )]
       }}
   when: _argocd_status != 'healthy'

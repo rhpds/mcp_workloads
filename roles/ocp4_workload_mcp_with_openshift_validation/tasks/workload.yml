@@ -5,7 +5,11 @@
 
 - name: Check if validation is enabled
   ansible.builtin.debug:
-    msg: "Validation is {{ 'enabled' if (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool) else 'disabled' }} - {{ 'proceeding' if (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool) else 'skipping' }}"
+    msg: >-
+      Validation is
+      {{ 'enabled' if (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool) else 'disabled' }}
+      -
+      {{ 'proceeding' if (ocp4_workload_mcp_with_openshift_validation_enabled | default(false) | bool) else 'skipping' }}
 
 - name: End play if validation is disabled
   ansible.builtin.meta: end_play
@@ -41,7 +45,9 @@
 
       GitOps Validation:
       - ArgoCD Apps: {{ 'enabled' if ocp4_workload_mcp_with_openshift_validation_check_argocd_apps | bool else 'disabled' }}
-      - Expected apps: {{ ocp4_workload_mcp_with_openshift_validation_num_users | int * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user }}
+      - Expected apps: {{
+          ocp4_workload_mcp_with_openshift_validation_num_users | int
+          * ocp4_workload_mcp_with_openshift_validation_argocd_apps_per_user }}
 
       ================================================
 
